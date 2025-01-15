@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>London Heatmap</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=visualization"></script>
+    <style>
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        function initMap() {
+            const london = { lat: 51.5074, lng: -0.1278 }; // Center of London
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 13,
+                center: london,
+                mapTypeId: "roadmap",
+            });
+
+            // Retrieve heatmap data from Flask
+            const heatmapData = {{ heatmap_data | tojson }};
+            const googleHeatmapData = heatmapData.map((point) => ({
+                location: new google.maps.LatLng(point.lat, point.lng),
+                weight: point.weight,
+            }));
+
+            const heatmap = new google.maps.visualization.HeatmapLayer({
+                data: googleHeatmapData,
+                radius: 20,
+            });
+
+            heatmap.setMap(map);
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
