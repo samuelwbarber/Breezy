@@ -10,13 +10,11 @@ export default function TabLayout() {
             tabBarActiveTintColor: '#ffd33d',
             headerStyle: {
             backgroundColor: '#25292e',
-            borderBottomWidth: 0
             },
             headerShadowVisible: true,
-            headerTintColor: '#fff', //'#02e'
+            headerTintColor: '#fff',
             tabBarStyle: {
             backgroundColor: '#25292e',
-            borderTopWidth: 0
             },
       }}
     >
@@ -26,6 +24,15 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="about"
+        options={{
+          title: 'About',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'information-circle' : 'information-circle-outline'} color={color} size={24} />
           ),
         }}
       />
@@ -41,16 +48,12 @@ export default function TabLayout() {
       <Tabs.Screen
       name = "journey"
       options ={{
-        title: 'Statistics',
+        title: 'Record',
         tabBarIcon: ({color, focused}) => (
-          <Ionicons name={focused ? 'stats-chart': 'stats-chart-outline'} color={color} size={24}/>
+          <Ionicons name={focused ? 'bicycle': 'bicycle-outline'} color={color} size={24}/>
         ),
-        //tabBarStyle: { display: 'none' }, // Hides the bottom tab bar when we go to journey
+        tabBarStyle: { display: 'none' }, // Hides the bottom tab bar when we go to journey
       }}
-      />
-      <Tabs.Screen 
-      name = "journey copy"
-      options = {{href: null}}
       />
     </Tabs>
   );
