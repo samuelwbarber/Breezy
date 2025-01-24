@@ -3,6 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, Modal } from "react-native";
 
 export default function SignInPopup() {
   const [isModalVisible, setModalVisible] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -16,19 +17,31 @@ export default function SignInPopup() {
     }
   };
 
+  const handleSignUp = () => {
+    if (email && password) {
+      setMessage("Account created successfully!");
+      setIsSignUp(false);  // Switch back to login mode after sign-up
+    } else {
+      setMessage("Please enter valid details.");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Button title="Sign In" onPress={() => setModalVisible(true)} />
       
       <Modal 
-        visible={isModalVisible}  // Corrected prop for visibility
-        transparent={true}        // Makes modal background transparent
-        animationType="slide"     // Adds slide animation
-        onRequestClose={() => setModalVisible(false)}  // Handles Android back button
+        visible={isModalVisible}  
+        transparent={true}        
+        animationType="slide"     
+        onRequestClose={() => setModalVisible(false)}  
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.title}>Sign In</Text>
+            <Text style={styles.title}>
+              {isSignUp ? "Create Account" : "Sign In"}
+            </Text>
+            
             <TextInput
               style={styles.input}
               placeholder="Enter your email"
@@ -36,6 +49,7 @@ export default function SignInPopup() {
               value={email}
               onChangeText={setEmail}
             />
+            
             <TextInput
               style={styles.input}
               placeholder="Enter your password"
@@ -43,9 +57,22 @@ export default function SignInPopup() {
               value={password}
               onChangeText={setPassword}
             />
-            <Button title="Login" onPress={handleSignIn} />
+
+            {isSignUp ? (
+              <Button title="Create Account" onPress={handleSignUp} />
+            ) : (
+              <Button title="Login" onPress={handleSignIn} />
+            )}
+
             <Button title="Close" onPress={() => setModalVisible(false)} />
             {message ? <Text style={styles.message}>{message}</Text> : null}
+
+            <Text 
+              style={styles.linkText} 
+              onPress={() => setIsSignUp(!isSignUp)}
+            >
+              {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Create one"}
+            </Text>
           </View>
         </View>
       </Modal>
@@ -63,7 +90,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",  // Dark overlay
+    backgroundColor: "rgba(0,0,0,0.5)",  
   },
   modalContent: {
     backgroundColor: "white",
@@ -89,5 +116,10 @@ const styles = StyleSheet.create({
   message: {
     marginTop: 10,
     color: "red",
+  },
+  linkText: {
+    marginTop: 15,
+    color: "blue",
+    textDecorationLine: "underline",
   },
 });
