@@ -1,32 +1,44 @@
-import { Text, View, StyleSheet } from "react-native";
-import {Link} from 'expo-router';
+import { Text, View, StyleSheet, Button } from "react-native";
+import { useRouter } from "expo-router";
+import SignInPopup from "@/components/SignInPopUp";
 
-  export default function Index() {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.text}>Home screen</Text>
-        <Link href="/map" style={styles.button}>
-        Go to Your Map</Link>
-      </View>
-    );
-  }
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '222', //rgb hex
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    text: {
-      color: '#000',
-    },
-    button: {
-      fontSize: 20,
-      textDecorationLine: 'underline',
-      color: '#000',
-    },
-  });  
+export default function Index() {
+  const router = useRouter();
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>Home screen</Text>
+      
+      {/* Sign-In Button */}
+      <SignInPopup />
+
+      {/* Existing Navigation Link */}
+      <Button
+        title="Go to Your Map"
+        onPress={() => {
+          console.log("Navigating to map...");
+          router.push("/map");
+        }}
+        color="#000"
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#222", // Fix hex color to a valid format
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  text: {
+    color: "#000",
+    fontSize: 24,
+    marginBottom: 20,
+  },
+});
 
   
 
