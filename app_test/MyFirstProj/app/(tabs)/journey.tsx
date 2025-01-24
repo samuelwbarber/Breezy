@@ -18,6 +18,8 @@ export default function Statistics() {
     NO2: 0,
   });
 
+
+
   // fake dummy data to populate our table. usEffect does this kinda stuff apparently
   // the empty dependency array at the end makes sure the code only runs once (when the component mounts)
   // we clear up the Interval when we leave
