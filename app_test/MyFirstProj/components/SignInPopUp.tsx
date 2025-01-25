@@ -59,9 +59,13 @@ export default function SignInPopup() {
             />
 
             {isSignUp ? (
-              <Button title="Create Account" onPress={handleSignUp} />
+              <View style={{ marginVertical: 5 }}>
+                <Button title="Create Account" onPress={handleSignUp} />
+              </View>
             ) : (
-              <Button title="Login" onPress={handleSignIn} />
+              <View style={{ marginVertical: 5 }}>
+                <Button title="Login" onPress={handleSignIn} />
+              </View>
             )}
 
             <Button title="Close" onPress={() => setModalVisible(false)} />
