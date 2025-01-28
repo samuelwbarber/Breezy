@@ -1,43 +1,52 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
-import MapView, { Heatmap, LatLng } from 'react-native-maps';
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View, ActivityIndicator } from "react-native";
+import MapView, { Heatmap, LatLng } from "react-native-maps";
+import { User } from "@/backend/user";
 
+// Define HeatmapPoint based on LatLng
 interface HeatmapPoint extends LatLng {
   weight: number;
 }
+
+// Define the Message structure
+class Message {
+  coordinate: { latitude: number; longitude: number };
+  value: number;
+  date: Date;
+
+  constructor(latitude: number, longitude: number, value: number, date: Date) {
+    this.coordinate = { latitude, longitude };
+    this.value = value;
+    this.date = date;
+  }
+}
+// This is a toy example of a User class
+let currentUser = new User("1", "Bob", "bob@gmail.com")
+currentUser.addMessage(51.5074, -0.1278, 0.8);
+currentUser.addMessage(51.5136, -0.1365, 0.6);
+currentUser.addMessage(51.5094, -0.1180, 0.7);
 
 export default function MapScreen() {
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-
-  // Function to dynamically fetch or generate heatmap data
-  const fetchHeatmapData = async (): Promise<HeatmapPoint[]> => {
-    // Simulate an API call or data calculation
-    const data: HeatmapPoint[] = [
-      { latitude: 51.5074, longitude: -0.1278, weight: 0.8 },
-      { latitude: 51.5136, longitude: -0.1365, weight: 0.6 },
-      { latitude: 51.5094, longitude: -0.1180, weight: 0.7 },
-      { latitude: 51.5200, longitude: -0.1400, weight: 0.5 },
-    ];
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(data), 2000); // Simulates network delay
-    });
+  // Transform messageLog into heatmap data
+  const transformMessageLogToHeatmap = (): HeatmapPoint[] => {
+    return currentUser.messageLog.map((msg) => ({
+      latitude: msg.coordinate.latitude,
+      longitude: msg.coordinate.longitude,
+      weight: msg.value, // Using message's value as weight
+    }));
   };
 
   useEffect(() => {
-    const loadHeatmapData = async () => {
-      try {
-        const data = await fetchHeatmapData();
-        setHeatmapData(data);
-      } catch (error) {
-        console.error('Error fetching heatmap data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
 
-    loadHeatmapData();
+    setTimeout(() => {
+      const heatmapPoints = transformMessageLogToHeatmap();
+      setHeatmapData(heatmapPoints);
+      setLoading(false);
+    }, 2000);
   }, []);
 
   if (loading) {
@@ -74,7 +83,7 @@ const styles = StyleSheet.create({
   },
   loader: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
