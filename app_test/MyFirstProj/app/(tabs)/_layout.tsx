@@ -48,9 +48,14 @@ export default function TabLayout() {
         //tabBarStyle: { display: 'none' }, // Hides the bottom tab bar when we go to journey
       }}
       />
-      <Tabs.Screen 
-      name = "journey copy"
-      options = {{href: null}}
+      <Tabs.Screen
+        name="mqtt"
+        options={{
+          title: 'MQTT',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'scan-circle' : 'scan-outline'} color={color} size={24}/>
+          ),
+        }}
       />
     </Tabs>
   );
