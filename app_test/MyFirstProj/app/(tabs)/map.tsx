@@ -10,6 +10,7 @@ export default function MapScreen() {
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+
   // Function to dynamically fetch or generate heatmap data
   const fetchHeatmapData = async (): Promise<HeatmapPoint[]> => {
     // Simulate an API call or data calculation
