@@ -1,81 +1,59 @@
+import { User } from "@/backend/user";
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Modal } from "react-native";
+import { Text, View, TextInput, Button, StyleSheet } from "react-native";
 
-export default function SignInPopup() {
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
   const [message, setMessage] = useState("");
 
+  
   const handleSignIn = () => {
-    if (email === "user@example.com" && password === "password123") {
+    if (email === "bob@bob.com" && password === "password") {
       setMessage("Login successful!");
-      setModalVisible(false);
+      let loggedUser = new User("1", "Bob", "bob@bob.com");
+      loggedUser.addMessage(51.5074, -0.1278, 0.8);
+      loggedUser.addMessage(51.5136, -0.1365, 0.6);
+      loggedUser.addMessage(51.5094, -0.1180, 0.7);
+      setCurrentUser(loggedUser); 
     } else {
       setMessage("Invalid email or password.");
     }
   };
 
-  const handleSignUp = () => {
-    if (email && password) {
-      setMessage("Account created successfully!");
-      setIsSignUp(false);  // Switch back to login mode after sign-up
-    } else {
-      setMessage("Please enter valid details.");
-    }
-  };
-
   return (
     <View style={styles.container}>
-      <Button title="Sign In" onPress={() => setModalVisible(true)} />
-      
-      <Modal 
-        visible={isModalVisible}  
-        transparent={true}        
-        animationType="slide"     
-        onRequestClose={() => setModalVisible(false)}  
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.title}>
-              {isSignUp ? "Create Account" : "Sign In"}
-            </Text>
-            
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-            
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-
-            {isSignUp ? (
-              <Button title="Create Account" onPress={handleSignUp} />
-            ) : (
-              <Button title="Login" onPress={handleSignIn} />
-            )}
-
-            <Button title="Close" onPress={() => setModalVisible(false)} />
-            {message ? <Text style={styles.message}>{message}</Text> : null}
-
-            <Text 
-              style={styles.linkText} 
-              onPress={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Create one"}
-            </Text>
-          </View>
-        </View>
-      </Modal>
+      {!currentUser ? (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            onChangeText={(text) => setEmail(text)}
+            value={email}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry
+            onChangeText={(text) => setPassword(text)}
+            value={password}
+          />
+          <Button title="Sign In" onPress={handleSignIn} />
+          <Text>{message}</Text>
+        </>
+      ) : (
+        <>
+          <Text>Welcome, {currentUser?.name}!</Text>
+          <Button
+            title="Log Out"
+            onPress={() => {
+              setCurrentUser(null); // Clear the user on logout
+              setMessage("");
+            }}
+          />
+        </>
+      )}
     </View>
   );
 }
@@ -85,41 +63,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",  
-  },
-  modalContent: {
-    backgroundColor: "white",
     padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    width: 300,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
   },
   input: {
-    width: "100%",
-    height: 40,
-    borderColor: "#ccc",
     borderWidth: 1,
+    borderColor: "#ccc",
     borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  message: {
-    marginTop: 10,
-    color: "red",
-  },
-  linkText: {
-    marginTop: 15,
-    color: "blue",
-    textDecorationLine: "underline",
+    padding: 10,
+    marginVertical: 5,
+    width: "100%",
   },
 });

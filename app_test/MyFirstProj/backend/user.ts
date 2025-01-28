@@ -1,5 +1,4 @@
 import { Message } from "./message";
-import { createHash } from "crypto"
 
 export class User {
   id: string;

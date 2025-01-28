@@ -18,9 +18,8 @@ export default function Index() {
         title="Go to Your Map"
         onPress={() => {
           console.log("Navigating to map...");
-          router.push("/map");
         }}
-        color="#000"
+        color="#841584"
       />
     </View>
   );
