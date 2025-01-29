@@ -1,61 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, ActivityIndicator } from "react-native";
 import MapView, { Heatmap, LatLng } from "react-native-maps";
-import { User } from "@/backend/user";
+import { useUser } from "@/backend/UserContext";
 
-// Define HeatmapPoint based on LatLng
 interface HeatmapPoint extends LatLng {
   weight: number;
 }
 
-// Define the Message structure
-class Message {
-  coordinate: { latitude: number; longitude: number };
-  value: number;
-  date: Date;
-
-  constructor(latitude: number, longitude: number, value: number, date: Date) {
-    this.coordinate = { latitude, longitude };
-    this.value = value;
-    this.date = date;
-  }
-}
-// This is a toy example of a User class
-let currentUser = new User("1", "Bob", "bob@gmail.com")
-currentUser.addMessage(51.5074, -0.1278, 0.8);
-currentUser.addMessage(51.5136, -0.1365, 0.6);
-currentUser.addMessage(51.5094, -0.1180, 0.7);
-
 export default function MapScreen() {
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { currentUser } = useUser();
 
-  // Transform messageLog into heatmap data
   const transformMessageLogToHeatmap = (): HeatmapPoint[] => {
+    if (!currentUser || currentUser.messageLog.length === 0) {
+      return [{ latitude: 51.5074, longitude: -0.1278, weight: 0.1 }];
+    }
     return currentUser.messageLog.map((msg) => ({
       latitude: msg.coordinate.latitude,
       longitude: msg.coordinate.longitude,
-      weight: msg.value, // Using message's value as weight
+      weight: msg.value,
     }));
   };
 
   useEffect(() => {
-    setLoading(true);
-
-    setTimeout(() => {
-      const heatmapPoints = transformMessageLogToHeatmap();
-      setHeatmapData(heatmapPoints);
-      setLoading(false);
-    }, 2000);
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
+    setHeatmapData(transformMessageLogToHeatmap()); // Update heatmap when user changes
+  }, [currentUser]); // 👈 This ensures the map updates when the user logs in
 
   return (
     <View style={styles.container}>
@@ -80,10 +49,5 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
-  },
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });
