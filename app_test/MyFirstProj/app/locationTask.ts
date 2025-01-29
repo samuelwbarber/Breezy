@@ -1,5 +1,11 @@
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_KEY } from './keys';
+import React, { useState, useEffect } from "react";
+
+const SERVER_IP = "http://192.168.2.1"; //CHANGE THIS DEPENDING ON IP OF BACKEND
+const SERVER_PORT = "3000";  //server is running on port 3000
+const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/getData`;
 
 // Variable to store the location watcher subscription
 let locationSubscription: Location.LocationSubscription | null = null;
@@ -24,17 +30,49 @@ export async function startLocationUpdates() {
     },
     async (location) => {
       const { latitude, longitude } = location.coords;
-      console.log("New foreground location:", latitude, longitude);
+      const timestamp = new Date().toISOString();
+      const locationData = {latitude, longitude, timestamp};
+
+      console.log("New foreground location:", latitude, longitude, "at", timestamp);
 
       // Save location to AsyncStorage
       try {
         await AsyncStorage.setItem(
           "currentLocation",
-          JSON.stringify({ latitude, longitude })
+          JSON.stringify({timestamp, latitude, longitude})
         );
       } catch (e) {
         console.error("Failed to save location:", e);
       }
+
+      fetch(SERVER_URL)
+      .then(response => response.json())
+      .then(data => console.log("Server response:", data))
+      .catch(error => console.error("Fetch error:", error));
+
+       // Send to backend
+       try { 
+
+        const response = await fetch (SERVER_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(locationData),
+        });
+
+
+        if (!response.ok) {
+          console.log("failure here");
+          throw new Error(`Server responded with status ${response.status}`);
+        }
+
+        console.log('Location successfully sent to server');
+      } catch (e) {
+        console.error('Failed to send location to server:', e);
+      }
+
+
     }
   );
 

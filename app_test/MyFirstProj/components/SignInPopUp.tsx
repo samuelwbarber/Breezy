@@ -1,7 +1,7 @@
-import { User } from "@/backend/user";
+import { User } from "@/app/user";
 import React, { useState } from "react";
 import { Text, View, TextInput, Button, StyleSheet } from "react-native";
-import { useUser } from "@/backend/UserContext";
+import { useUser } from "@/app/UserContext";
 
 export default function App() {
   const [email, setEmail] = useState("");

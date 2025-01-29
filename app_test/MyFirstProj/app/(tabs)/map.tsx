@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, ActivityIndicator } from "react-native";
 import MapView, { Heatmap, LatLng } from "react-native-maps";
-import { useUser } from "@/backend/UserContext";
+import { useUser } from "@/app/UserContext";
+import {User} from "@/app/user"
 
 interface HeatmapPoint extends LatLng {
   weight: number;
