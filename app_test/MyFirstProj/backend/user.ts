@@ -4,35 +4,30 @@ export class User {
   id: string;
   name: string;
   email: string;
-  createdAt: Date;
   private passwordHash: string;
   messageLog: Message[];
 
-  constructor(id: string, name: string, email: string) {
+  constructor(id: string, name: string, email: string, messageLog: Message[] = []) {
     this.id = id;
     this.name = name;
     this.email = email;
-    this.createdAt = new Date();
     this.passwordHash = "";
-    this.messageLog = [];  
+    this.messageLog = messageLog;
   }
-
 
   setPassword(password: string): void {
-    this.passwordHash = this.hashPassword(password);
+    this.passwordHash = (password);
   }
 
-  private hashPassword(password: string): string {
-    return createHash("sha256").update(password).digest("hex");
-  }
+
 
   verifyPassword(password: string): boolean {
-    return this.hashPassword(password) === this.passwordHash;
+    return password === this.passwordHash;
   }
-  
-  addMessage(latitude: number, longitude: number, value: number, date?: Date): void {
+
+  addMessage(latitude: number, longitude: number, value: number, date: Date = new Date()): void {
     const newMessage = new Message(latitude, longitude, value, date);
-    this.messageLog.push(newMessage);
+    this.messageLog = [...this.messageLog, newMessage]; // Ensure React state updates properly
   }
 
   getMessages(): Message[] {

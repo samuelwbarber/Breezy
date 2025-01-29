@@ -1,72 +1,28 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { User } from ".user";  // Import your User class
+import React, { createContext, useContext, useState, ReactNode } from "react";
+import { User } from "./user"; // Import User class
 
-// Define provider props
-interface UserProviderProps {
-  children: ReactNode;
-}
-
-// Define context type
+// Define Context Type
 interface UserContextType {
-  user: User | null;
-  login: (id: string, name: string, email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
 }
 
-const UserContext = createContext<UserContextType | null>(null);
+// Create Context with default values
+const UserContext = createContext<UserContextType>({
+  currentUser: null,
+  setCurrentUser: () => {},
+});
 
-export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-
-  // Load user from AsyncStorage on app start
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const storedUser = await AsyncStorage.getItem("loggedInUser");
-        if (storedUser) {
-          const parsedData = JSON.parse(storedUser);
-          const loadedUser = new User(parsedData.id, parsedData.name, parsedData.email);
-          setUser(loadedUser);
-        }
-      } catch (error) {
-        console.error("Error loading user:", error);
-      }
-    };
-    loadUser();
-  }, []);
-
-  // Save user when logging in
-  const login = async (id: string, name: string, email: string, password: string) => {
-    const newUser = new User(id, name, email);
-    newUser.setPassword(password);
-
-    try {
-      await AsyncStorage.setItem("loggedInUser", JSON.stringify(newUser));
-      setUser(newUser);
-    } catch (error) {
-      console.error("Error saving user:", error);
-    }
-  };
-
-  // Logout function
-  const logout = async () => {
-    await AsyncStorage.removeItem("loggedInUser");
-    setUser(null);
-  };
+// Provider Component
+export const UserProvider = ({ children }: { children: ReactNode }) => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={{ currentUser, setCurrentUser }}>
       {children}
     </UserContext.Provider>
   );
 };
 
-// Custom hook to access user context
-export const useUser = () => {
-  const context = useContext(UserContext);
-  if (!context) {
-    throw new Error("useUser must be used within a UserProvider");
-  }
-  return context;
-};
+// Hook to access UserContext
+export const useUser = () => useContext(UserContext);

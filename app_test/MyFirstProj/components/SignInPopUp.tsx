@@ -1,11 +1,12 @@
 import { User } from "@/backend/user";
 import React, { useState } from "react";
 import { Text, View, TextInput, Button, StyleSheet } from "react-native";
+import { useUser } from "@/backend/UserContext";
 
 export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [currentUser, setCurrentUser] = useState(null);
+  const { currentUser, setCurrentUser } = useUser();
   const [message, setMessage] = useState("");
 
   
