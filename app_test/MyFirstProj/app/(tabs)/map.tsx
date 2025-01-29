@@ -24,7 +24,7 @@ class Message {
 let currentUser = new User("1", "Bob", "bob@gmail.com")
 currentUser.addMessage(51.5074, -0.1278, 0.8);
 currentUser.addMessage(51.5136, -0.1365, 0.6);
-currentUser.addMessage(51.5094, -0.1180, 0.7);
+//currentUser.addMessage(51.5094, -0.1180, 0.7);
 
 export default function MapScreen() {
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
