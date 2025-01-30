@@ -3,9 +3,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_KEY } from './keys';
 import React, { useState, useEffect } from "react";
 
-const SERVER_IP = "http://192.168.2.1"; //CHANGE THIS DEPENDING ON IP OF BACKEND
-const SERVER_PORT = "3000";  //server is running on port 3000
-const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/getData`;
+//WATCH OUT!
+
+const SERVER_IP = "http://192.168.1.66"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
+const SERVER_PORT = "3000";  //port 3000
+const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/location`;
 
 // Variable to store the location watcher subscription
 let locationSubscription: Location.LocationSubscription | null = null;
@@ -45,10 +47,10 @@ export async function startLocationUpdates() {
         console.error("Failed to save location:", e);
       }
 
-      fetch(SERVER_URL)
-      .then(response => response.json())
-      .then(data => console.log("Server response:", data))
-      .catch(error => console.error("Fetch error:", error));
+      // fetch(SERVER_URL)
+      // .then(response => response.json())
+      // .then(data => console.log("Server response:", data))
+      // .catch(error => console.error("Fetch error:", error));
 
        // Send to backend
        try { 

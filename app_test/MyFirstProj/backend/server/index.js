@@ -39,13 +39,15 @@ app.get('/getData', (req, res) => {
 app.post('/location', async (req, res) => {
   
   const { latitude, longitude, timestamp } = req.body;
+  const formattedTimestamp = new Date(timestamp).toISOString().slice(0, 19).replace("T", " ");
 
-  
+
   if ( !latitude || !longitude || !timestamp ) {
     return res.status(400).json({ error: 'Missing required data' });
   }
+
   const query = 'INSERT INTO ENTRY (ID, LONGITUDE, LATITUDE, ENTRY_TIME, ECO2, TVOC) VALUES (?, ?, ?, ?, NULL, NULL);';
-  db.query(query, ['cyclist_001', longitude, latitude, timestamp], (err, results) => {
+  db.query(query, ['cyclist_001', longitude, latitude, formattedTimestamp], (err, results) => {
     if (err) {
       console.error('Error inserting location data:', err);
       return res.status(500).json({ error: 'Database error' });
