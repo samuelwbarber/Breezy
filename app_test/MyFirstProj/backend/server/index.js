@@ -10,8 +10,8 @@ app.use(express.json());  // for parsing application/json
 
 // Set up MySQL connection
 const db = mysql.createConnection({
-  host: '18.134.180.224',  // e.g., 'localhost'
-  user: 'remote_user',  // e.g., 'root'
+  host: '18.134.180.224',  
+  user: 'remote_user',  
   password: 'Embedded2025!',
   database: 'DB2',
 });
@@ -34,6 +34,119 @@ app.get('/getData', (req, res) => {
       res.status(200).json(results);
     }
   });
+});
+
+
+//login request
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Missing email or password' });
+  }
+
+  try {
+    const query = 'SELECT ID, NAME, EMAIL, PASSWORD_HASH FROM USER WHERE EMAIL = ?';
+    const [rows] = await db.promise().query(query, [email]);
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    const user = rows[0];
+
+    // password needs to be hashed at some point?
+    if (password !== user.PASSWORD_HASH) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+
+    res.status(200).json({
+      id: user.ID,
+      name: user.NAME,
+      email: user.EMAIL,
+    });
+
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Database query failed" });
+  }
+});
+
+
+
+app.get('/user-data/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    
+    const query = `SELECT LONGITUDE, LATITUDE, ECO2, TVOC FROM ENTRY WHERE ID = ?`;
+    
+    db.query(query, [userId], (err, rows) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ error: "Database query failed" });
+      }
+
+      const transformedData = rows.map(row => ({
+        latitude: row.LATITUDE,
+        longitude: row.LONGITUDE,
+        weight: calculateWeight(row.ECO2, row.TVOC), // Use ECO2 & TVOC as weight
+      }));
+
+      res.json(transformedData);
+    });
+
+  } catch (err) {
+    console.error("Unexpected server error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+function calculateWeight(eco2, tvoc) {
+  if (!eco2 || !tvoc) return 0.1; 
+  return Math.min(1, (tvoc / 1000) + (eco2 / 5000)); // Scale appropriately
+}
+
+
+app.get('/user-data-by-email/:email', async (req, res) => {
+  const userEmail = req.params.email;
+
+  try {
+    // Step 1: Find user ID from EMAIL
+    const userQuery = `SELECT ID FROM USER WHERE EMAIL = ?`;
+    db.query(userQuery, [userEmail], (err, userRows) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ error: "Database query failed" });
+      }
+      if (userRows.length === 0) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const userId = userRows[0].ID; // Extract ID
+
+      // Step 2: Fetch location data from ENTRY table
+      const entryQuery = `SELECT LONGITUDE, LATITUDE, ECO2, TVOC FROM ENTRY WHERE ID = ?`;
+      db.query(entryQuery, [userId], (err, rows) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ error: "Database query failed" });
+        }
+
+        const transformedData = rows.map(row => ({
+          latitude: row.LATITUDE,
+          longitude: row.LONGITUDE,
+          weight: calculateWeight(row.ECO2, row.TVOC),
+        }));
+
+        res.json(transformedData);
+      });
+    });
+
+  } catch (err) {
+    console.error("Unexpected server error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 app.post('/location', async (req, res) => {

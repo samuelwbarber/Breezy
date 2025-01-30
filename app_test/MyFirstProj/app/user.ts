@@ -19,8 +19,6 @@ export class User {
     this.passwordHash = (password);
   }
 
-
-
   verifyPassword(password: string): boolean {
     return password === this.passwordHash;
   }

@@ -4,46 +4,40 @@ import MapView, { Heatmap, LatLng } from "react-native-maps";
 import { useUser } from "@/app/UserContext";
 import {User} from "@/app/user"
 
+const SERVER_IP = "http://192.168.1.66"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
+const SERVER_PORT = "3000";  
+const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}`;
+
 interface HeatmapPoint extends LatLng {
   weight: number;
 }
-
-// Define the Message structure
-class Message {
-  coordinate: { latitude: number; longitude: number };
-  value: number;
-  date: Date;
-
-  constructor(latitude: number, longitude: number, value: number, date: Date) {
-    this.coordinate = { latitude, longitude };
-    this.value = value;
-    this.date = date;
-  }
-}
-// This is a toy example of a User class
-let currentUser = new User("1", "Bob", "bob@gmail.com")
-currentUser.addMessage(51.5074, -0.1278, 0.8);
-currentUser.addMessage(51.5136, -0.1365, 0.6);
-//currentUser.addMessage(51.5094, -0.1180, 0.7);
 
 export default function MapScreen() {
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
   const { currentUser } = useUser();
 
-  const transformMessageLogToHeatmap = (): HeatmapPoint[] => {
-    if (!currentUser || currentUser.messageLog.length === 0) {
-      return [{ latitude: 51.5074, longitude: -0.1278, weight: 0.1 }];
-    }
-    return currentUser.messageLog.map((msg) => ({
-      latitude: msg.coordinate.latitude,
-      longitude: msg.coordinate.longitude,
-      weight: msg.value,
-    }));
-  };
 
   useEffect(() => {
-    setHeatmapData(transformMessageLogToHeatmap()); // Update heatmap when user changes
-  }, [currentUser]); // 👈 This ensures the map updates when the user logs in
+    if (!currentUser) return;
+
+    const fetchHeatmapData = async () => {
+      try {
+        const response = await fetch(
+          `${SERVER_URL}/user-data-by-email/${encodeURIComponent(currentUser.email)}`
+        );
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}`);
+        }
+        const data = await response.json();
+        setHeatmapData(data);
+      } catch (error) {
+        console.error("Failed to fetch heatmap data:", error);
+      }
+    };
+
+    fetchHeatmapData();
+  }, [currentUser]);
+
 
   return (
     <View style={styles.container}>

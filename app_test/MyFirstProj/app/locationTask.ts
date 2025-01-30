@@ -6,7 +6,7 @@ import React, { useState, useEffect } from "react";
 //WATCH OUT!
 
 const SERVER_IP = "http://192.168.1.66"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
-const SERVER_PORT = "3000";  //port 3000
+const SERVER_PORT = "3000";  
 const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/location`;
 
 // Variable to store the location watcher subscription
@@ -47,14 +47,8 @@ export async function startLocationUpdates() {
         console.error("Failed to save location:", e);
       }
 
-      // fetch(SERVER_URL)
-      // .then(response => response.json())
-      // .then(data => console.log("Server response:", data))
-      // .catch(error => console.error("Fetch error:", error));
-
        // Send to backend
        try { 
-
         const response = await fetch (SERVER_URL, {
           method: 'POST',
           headers: {
