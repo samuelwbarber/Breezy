@@ -18,7 +18,14 @@ export default function MapScreen() {
 
 
   useEffect(() => {
-    if (!currentUser) return;
+    console.log("Current user:", currentUser);
+    if (!currentUser) {
+      // Set a default location (Example: Central London)
+      setHeatmapData([
+        { latitude: 51.5074, longitude: -0.1278, weight: 1 } // Default point
+      ]);
+      return;
+    }
 
     const fetchHeatmapData = async () => {
       try {
@@ -29,6 +36,7 @@ export default function MapScreen() {
           throw new Error(`Server responded with ${response.status}`);
         }
         const data = await response.json();
+        console.log("Heatmap data:", data);
         setHeatmapData(data);
       } catch (error) {
         console.error("Failed to fetch heatmap data:", error);
