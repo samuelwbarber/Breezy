@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, ActivityIndicator } from "react-native";
+import { Text,StyleSheet, View, ActivityIndicator } from "react-native";
 import MapView, { Heatmap, LatLng } from "react-native-maps";
 import { useUser } from "@/app/UserContext";
 import {User} from "@/app/user"
@@ -18,25 +18,55 @@ export default function MapScreen() {
 
 
   useEffect(() => {
-    if (!currentUser) return;
-
+    
     const fetchHeatmapData = async () => {
+      if (!currentUser) {
+        console.warn("No current user found.");
+        return;
+      }
+    
+      console.log(`Fetching heatmap data for user: ${currentUser.email}`);
+    
       try {
-        const response = await fetch(
-          `${SERVER_URL}/user-data-by-email/${encodeURIComponent(currentUser.email)}`
-        );
-        if (!response.ok) {
-          throw new Error(`Server responded with ${response.status}`);
-        }
+        const response = await fetch(`${SERVER_URL}/user-data-by-email/${currentUser.email}`);
+        
+        // Log status of the response and response body
+        console.log("API Response Status:", response.status);
         const data = await response.json();
-        setHeatmapData(data);
+        console.log("API Response Data:", data);
+    
+        // If response isn't ok, log the error and return early
+        if (!response.ok) {
+          console.error("Error fetching heatmap data:", data.error);
+          return;
+        }
+    
+        // Log data before we process it
+        if (Array.isArray(data) && data.length === 0) {
+          console.warn("No points found for the user.");
+          return;
+        }
+    
+        // Parse latitude and longitude, set the weight as expected
+        const formattedData = data.map((point: any) => ({
+          latitude: parseFloat(point.latitude),
+          longitude: parseFloat(point.longitude),
+          weight: parseFloat(point.weight), // Ensure weight is a float, not string
+        }));
+    
+        console.log("Processed heatmap data:", formattedData);
+    
+        setHeatmapData(formattedData); // Update state with processed data
+    
       } catch (error) {
-        console.error("Failed to fetch heatmap data:", error);
+        console.error("Error fetching heatmap data:", error);
       }
     };
-
+    
+  
     fetchHeatmapData();
   }, [currentUser]);
+  
 
 
   return (
@@ -50,7 +80,11 @@ export default function MapScreen() {
           longitudeDelta: 0.04,
         }}
       >
-        <Heatmap points={heatmapData} />
+        {heatmapData.length > 0 ? (
+          <Heatmap points={heatmapData} />
+        ) : (
+          <Text>No heatmap data available</Text>
+        )}
       </MapView>
     </View>
   );

@@ -14,43 +14,52 @@ export default function App() {
   const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/login`;
 
   
-  // const handleSignIn = () => {
-  //   if (email === "bob@bob.com" && password === "password") {
-  //     setMessage("Login successful!");
-  //     let loggedUser = new User("1", "Bob", "bob@bob.com");
-  //     loggedUser.addMessage(51.5074, -0.1278, 0.8);
-  //     loggedUser.addMessage(51.5136, -0.1365, 0.6);
-  //     loggedUser.addMessage(51.5094, -0.1180, 0.7);
-  //     setCurrentUser(loggedUser); 
-  //   } else {
-  //     setMessage("Invalid email or password.");
-  //   }
-  // };
-
-  const handleSignIn = async () => {
-    try {
-      const response = await fetch(SERVER_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed");
-      }
-  
+  const handleSignIn = () => {
+    if (email === "bob@bob.com" && password === "password") {
       setMessage("Login successful!");
-      let loggedUser = new User(data.id, data.name, data.email);
+      console.log("Login successful!");
+
+      let loggedUser = new User("1", "John Cyclist", "john.cyclist@example.com");
+      loggedUser.setPassword('e0e6097a6f8af07daf5fc7244336ba37133713a8fc7345c36d667dfa513fabaa');
+
       setCurrentUser(loggedUser);
-    } catch (error) {
+
+      loggedUser.addMessage(51.5074, -0.1278, 0.8);
+      loggedUser.addMessage(51.5136, -0.1365, 0.6);
+      loggedUser.addMessage(51.5094, -0.1180, 0.7);
+
+      console.log(currentUser);
+
+    } else {
       setMessage("Invalid email or password.");
-      console.error("Login error:", error);
+      console.log("Invalid email or password.");
     }
   };
+
+  // const handleSignIn = async () => {
+  //   try {
+  //     const response = await fetch(SERVER_URL, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ email, password }),
+  //     });
+  
+  //     const data = await response.json();
+  
+  //     if (!response.ok) {
+  //       throw new Error(data.error || "Login failed");
+  //     }
+  
+  //     setMessage("Login successful!");
+  //     let loggedUser = new User(data.id, data.name, data.email);
+  //     setCurrentUser(loggedUser);
+  //   } catch (error) {
+  //     setMessage("Invalid email or password.");
+  //     console.error("Login error:", error);
+  //   }
+  // };
 
   return (
     <View style={styles.container}>

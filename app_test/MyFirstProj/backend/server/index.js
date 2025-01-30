@@ -94,6 +94,7 @@ app.get('/user-data/:userId', async (req, res) => {
       }));
 
       res.json(transformedData);
+      console.log("Retrieved Heatmap Data");
     });
 
   } catch (err) {
@@ -112,7 +113,10 @@ app.get('/user-data-by-email/:email', async (req, res) => {
   const userEmail = req.params.email;
 
   try {
-    // Step 1: Find user ID from EMAIL
+
+    console.log(`Findung UserId for User: ${currentUser.email}`);
+
+    //Find user ID from EMAIL
     const userQuery = `SELECT ID FROM USER WHERE EMAIL = ?`;
     db.query(userQuery, [userEmail], (err, userRows) => {
       if (err) {
@@ -124,6 +128,8 @@ app.get('/user-data-by-email/:email', async (req, res) => {
       }
 
       const userId = userRows[0].ID; // Extract ID
+
+      console.log(`Fetching heatmap data for user: ${userId}`);
 
       // Step 2: Fetch location data from ENTRY table
       const entryQuery = `SELECT LONGITUDE, LATITUDE, ECO2, TVOC FROM ENTRY WHERE ID = ?`;
@@ -140,6 +146,8 @@ app.get('/user-data-by-email/:email', async (req, res) => {
         }));
 
         res.json(transformedData);
+        console.log("Retrieved Heatmap Data");
+
       });
     });
 

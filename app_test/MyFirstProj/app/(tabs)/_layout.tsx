@@ -1,10 +1,11 @@
 import { Tabs } from 'expo-router';
-
+import {UserProvider} from '@/app/UserContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 
 export default function TabLayout() {
   return (
+    <UserProvider>
     <Tabs
         screenOptions={{
             tabBarActiveTintColor: '#ffd33d',
@@ -19,7 +20,7 @@ export default function TabLayout() {
             borderTopWidth: 0
             },
       }}
-    >
+    > 
       <Tabs.Screen
         name="index"
         options={{
@@ -49,5 +50,6 @@ export default function TabLayout() {
       }}
       />
     </Tabs>
+    </UserProvider>
   );
 }
