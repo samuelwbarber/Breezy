@@ -5,14 +5,13 @@ import React, { useState, useEffect } from "react";
 
 //WATCH OUT!
 
-const SERVER_IP = "http://192.168.1.66"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
+const SERVER_IP = "http://172.26.207.214"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
 const SERVER_PORT = "3000";  
 const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/location`;
 
-// Variable to store the location watcher subscription
+
 let locationSubscription: Location.LocationSubscription | null = null;
 
-// Function to start tracking foreground location
 export async function startLocationUpdates() {
   console.log("Requesting foreground location updates...");
 
@@ -27,21 +26,22 @@ export async function startLocationUpdates() {
   locationSubscription = await Location.watchPositionAsync(
     {
       accuracy: Location.Accuracy.High,
-      timeInterval: 0.001, // Update every 5 seconds
+      timeInterval: 0.005, // Update every 5 seconds
       distanceInterval: 0.001, // Update every 5 meters
     },
     async (location) => {
       const { latitude, longitude } = location.coords;
-      const timestamp = new Date().toISOString();
+      const timestamp = new Date().toISOString().split('.')[0] + 'Z';
       const locationData = {latitude, longitude, timestamp};
 
       console.log("New foreground location:", latitude, longitude, "at", timestamp);
 
       // Save location to AsyncStorage
       try {
+        console.log("Sending request:", JSON.stringify(locationData));
         await AsyncStorage.setItem(
           "currentLocation",
-          JSON.stringify({timestamp, latitude, longitude})
+          JSON.stringify(locationData)
         );
       } catch (e) {
         console.error("Failed to save location:", e);
@@ -59,7 +59,8 @@ export async function startLocationUpdates() {
 
 
         if (!response.ok) {
-          console.log("failure here");
+          const errorText = await response.text(); 
+          console.error("Server error:", response.status, errorText);
           throw new Error(`Server responded with status ${response.status}`);
         }
 
@@ -75,7 +76,7 @@ export async function startLocationUpdates() {
   console.log("Foreground location tracking started.");
 }
 
-// Function to stop tracking foreground location
+
 export function stopLocationUpdates() {
   if (locationSubscription) {
     locationSubscription.remove();
@@ -84,7 +85,6 @@ export function stopLocationUpdates() {
   }
 }
 
-// Function to get the last stored location
 export async function getCurrentLocation() {
   try {
     const location = await AsyncStorage.getItem("currentLocation");

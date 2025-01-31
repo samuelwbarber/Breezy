@@ -8,22 +8,44 @@ const port = 3000;
 app.use(cors());
 app.use(express.json());  // for parsing application/json
 
-// Set up MySQL connection
-const db = mysql.createConnection({
+// Create a connection pool
+const db = mysql.createPool({
   host: '18.134.180.224',  
-  user: 'remote_user',  
+  user: 'remote_user',      
   password: 'Embedded2025!',
-  database: 'DB2',
+  database: 'DB2',          
+  waitForConnections: true, // Allow waiting for a connection
+  connectionLimit: 10,      // Limit the number of concurrent connections
+  queueLimit: 0             // Allow unlimited queued connections
 });
 
-// Test DB connection
-db.connect(err => {
+// Test pool connection
+db.getConnection((err, connection) => {
   if (err) {
-    console.log('Database connection failed:', err.stack);
+    console.error('Database connection failed:', err.stack);
     return;
   }
-  console.log('Connected to MySQL as id ' + db.threadId);
+  console.log('Connected to MySQL as id ' + connection.threadId);
+  connection.release(); // Release the connection back to the pool
 });
+
+
+// //Single MySQL connection
+// const db = mysql.createConnection({
+//   host: '18.134.180.224',  
+//   user: 'remote_user',  
+//   password: 'Embedded2025!',
+//   database: 'DB2',
+// });
+
+// //Test DB connection
+// db.connect(err => {
+//   if (err) {
+//     console.log('Database connection failed:', err.stack);
+//     return;
+//   }
+//   console.log('Connected to MySQL as id ' + db.threadId);
+// });
 
 // Example route to query MySQL
 app.get('/getData', (req, res) => {
@@ -69,7 +91,9 @@ app.post('/login', async (req, res) => {
   } catch (err) {
     console.error("Database error:", err);
     res.status(500).json({ error: "Database query failed" });
+    
   }
+  connection.release();
 });
 
 
@@ -101,6 +125,7 @@ app.get('/user-data/:userId', async (req, res) => {
     console.error("Unexpected server error:", err);
     res.status(500).json({ error: "Server error" });
   }
+  connection.release();
 });
 
 function calculateWeight(eco2, tvoc) {
@@ -155,6 +180,7 @@ app.get('/user-data-by-email/:email', async (req, res) => {
     console.error("Unexpected server error:", err);
     res.status(500).json({ error: "Server error" });
   }
+  connection.release();
 });
 
 app.post('/location', async (req, res) => {
@@ -176,7 +202,7 @@ app.post('/location', async (req, res) => {
     console.log('Location data inserted successfully');
     res.status(201).json({ message: 'Location data stored successfully' });
   });
-
+  connection.release();
 });
 
 // Start the server

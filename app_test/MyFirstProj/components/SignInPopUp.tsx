@@ -2,6 +2,7 @@ import { User } from "@/app/user";
 import React, { useState } from "react";
 import { Text, View, TextInput, Button, StyleSheet } from "react-native";
 import { useUser } from "@/app/UserContext";
+import { useEffect } from "react";
 
 export default function App() {
   const [email, setEmail] = useState("");
@@ -9,57 +10,62 @@ export default function App() {
   const { currentUser, setCurrentUser } = useUser();
   const [message, setMessage] = useState("");
 
-  const SERVER_IP = "http://192.168.1.66"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
+  const SERVER_IP = "http://172.26.207.214"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
   const SERVER_PORT = "3000";  
   const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/login`;
 
   
-  const handleSignIn = () => {
+  useEffect(() => {
+    if (currentUser) {
+      console.log("Current user updated:", currentUser);
+    }
+  }, [currentUser]); 
+
+
+  const handleSignIn = async () => {
+
+    setCurrentUser(null);
+
+    // Cheat login method
     if (email === "bob@bob.com" && password === "password") {
+      
       setMessage("Login successful!");
       console.log("Login successful!");
-
       let loggedUser = new User("1", "John Cyclist", "john.cyclist@example.com");
       loggedUser.setPassword('e0e6097a6f8af07daf5fc7244336ba37133713a8fc7345c36d667dfa513fabaa');
 
-      setCurrentUser(loggedUser);
-
-      loggedUser.addMessage(51.5074, -0.1278, 0.8);
-      loggedUser.addMessage(51.5136, -0.1365, 0.6);
-      loggedUser.addMessage(51.5094, -0.1180, 0.7);
-
-      console.log(currentUser);
+      setCurrentUser(loggedUser);  // This should trigger a re-render
+      
 
     } else {
-      setMessage("Invalid email or password.");
-      console.log("Invalid email or password.");
+      // Check login through API
+      try {
+        const response = await fetch(SERVER_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Login failed");
+        }
+
+        setMessage("Login successful!");
+        let loggedUser = new User(data.id, data.name, data.email);
+        setCurrentUser(loggedUser);
+
+      } catch (error) {
+        setMessage("Invalid email or password.");
+        console.error("Login error:", error);
+      }
     }
   };
 
-  // const handleSignIn = async () => {
-  //   try {
-  //     const response = await fetch(SERVER_URL, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ email, password }),
-  //     });
-  
-  //     const data = await response.json();
-  
-  //     if (!response.ok) {
-  //       throw new Error(data.error || "Login failed");
-  //     }
-  
-  //     setMessage("Login successful!");
-  //     let loggedUser = new User(data.id, data.name, data.email);
-  //     setCurrentUser(loggedUser);
-  //   } catch (error) {
-  //     setMessage("Invalid email or password.");
-  //     console.error("Login error:", error);
-  //   }
-  // };
+ 
 
   return (
     <View style={styles.container}>
@@ -88,7 +94,6 @@ export default function App() {
             title="Log Out"
             onPress={() => {
               setCurrentUser(null); // Clear the user on logout
-              setMessage("");
             }}
           />
         </>

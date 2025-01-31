@@ -4,7 +4,7 @@ import MapView, { Heatmap, LatLng } from "react-native-maps";
 import { useUser } from "@/app/UserContext";
 import {User} from "@/app/user"
 
-const SERVER_IP = "http://192.168.1.66"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
+const SERVER_IP = "http://172.26.207.214"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
 const SERVER_PORT = "3000";  
 const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}`;
 
@@ -28,35 +28,29 @@ export default function MapScreen() {
       console.log(`Fetching heatmap data for user: ${currentUser.email}`);
     
       try {
-        const response = await fetch(`${SERVER_URL}/user-data-by-email/${currentUser.email}`);
+        const response = await fetch(`${SERVER_URL}/user-data/cyclist_001`);
         
         // Log status of the response and response body
         console.log("API Response Status:", response.status);
         const data = await response.json();
-        console.log("API Response Data:", data);
-    
-        // If response isn't ok, log the error and return early
         if (!response.ok) {
           console.error("Error fetching heatmap data:", data.error);
           return;
         }
     
-        // Log data before we process it
         if (Array.isArray(data) && data.length === 0) {
           console.warn("No points found for the user.");
           return;
         }
     
-        // Parse latitude and longitude, set the weight as expected
+        // Parse data
         const formattedData = data.map((point: any) => ({
           latitude: parseFloat(point.latitude),
           longitude: parseFloat(point.longitude),
           weight: parseFloat(point.weight), // Ensure weight is a float, not string
         }));
     
-        console.log("Processed heatmap data:", formattedData);
-    
-        setHeatmapData(formattedData); // Update state with processed data
+        setHeatmapData(formattedData); 
     
       } catch (error) {
         console.error("Error fetching heatmap data:", error);
