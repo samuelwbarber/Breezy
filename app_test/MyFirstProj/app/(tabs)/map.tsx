@@ -18,14 +18,15 @@ export default function MapScreen() {
 
 
   useEffect(() => {
-    
+
+
     const fetchHeatmapData = async () => {
       if (!currentUser) {
         console.warn("No current user found.");
         return;
       }
     
-      console.log(`Fetching heatmap data for user: ${currentUser.email}`);
+      console.log(`Fetching hellooooo for user: ${currentUser.email}`);
     
       try {
         const response = await fetch(`${SERVER_URL}/user-data/cyclist_001`);
@@ -56,7 +57,7 @@ export default function MapScreen() {
         console.error("Error fetching heatmap data:", error);
       }
     };
-    
+  
   
     fetchHeatmapData();
   }, [currentUser]);
