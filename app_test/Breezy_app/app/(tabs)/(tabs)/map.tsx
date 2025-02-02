@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Text,StyleSheet, View, ActivityIndicator } from "react-native";
+import { Text, StyleSheet, View, ActivityIndicator, TouchableOpacity } from "react-native";
 import MapView, { Heatmap, LatLng } from "react-native-maps";
 import { useUser } from "@/app/context/userContext";
 import { SERVER_URL} from "@/app/config";
+import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface HeatmapPoint extends LatLng {
     weight: number;
@@ -12,9 +14,11 @@ interface HeatmapPoint extends LatLng {
 
     const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
     const { currentUser } = useUser();
-  
+    const [range, setRange] = useState([0, 24]);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    
     useEffect(() => {
-  
       const fetchHeatmapData = async () => {
         if (!currentUser) {
           console.warn("No current user found.");
@@ -27,7 +31,6 @@ interface HeatmapPoint extends LatLng {
         try {
           const response = await fetch(`${SERVER_URL}/user-data/${currentUser.id}`);
           
-          // Log status of the response and response body
           console.log("API Response Status:", response.status);
           const data = await response.json();
           if (!response.ok) {
@@ -41,11 +44,10 @@ interface HeatmapPoint extends LatLng {
             return;
           }
       
-          // Parse data
           const formattedData = data.map((point: any) => ({
             latitude: parseFloat(point.latitude),
             longitude: parseFloat(point.longitude),
-            weight: parseFloat(point.weight), // Ensure weight is a float, not string
+            weight: parseFloat(point.weight),
           }));
   
           console.log("Formatted Heatmap Data");
@@ -58,15 +60,12 @@ interface HeatmapPoint extends LatLng {
         }
       };
     
-    
       fetchHeatmapData();
     }, [currentUser]);
-
 
     useEffect(() => {
         console.log("Updated heatmap data:", heatmapData.length);
       }, [heatmapData]);
-
     
     if (heatmapData.length === 0) {
         return (
@@ -89,12 +88,40 @@ interface HeatmapPoint extends LatLng {
           }}
         >
           {heatmapData.length > 1 ? (
-            //I've only plotted first 50 points cause user has 1600 entries which the map can't render
             <Heatmap points={heatmapData.slice(0, 50)} /> 
           ) : (
             <Text>No heatmap data available</Text>
           )}
         </MapView>
+
+        {/* Date Picker and Multi-range slider for time selection */}
+        <View style={styles.sliderContainer}>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <Text style={{ color: 'blue', textDecorationLine: 'underline' }}>Select Date: <Text style={{ color: 'blue', textDecorationLine: 'underline' }}>{selectedDate.toDateString()}</Text></Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate}
+              mode="date"
+              display="default"
+              onChange={(event, date) => {
+                setShowDatePicker(false);
+                if (date) setSelectedDate(date);
+              }}
+            />
+          )}
+          <Text>Selected Time Range: {range[0]}:00 - {range[1]}:00</Text>
+          <MultiSlider
+            values={range}
+            min={0}
+            max={24}
+            step={1}
+            onValuesChange={setRange}
+            selectedStyle={{ backgroundColor: "#0000ff" }}
+            unselectedStyle={{ backgroundColor: "#cccccc" }}
+            markerStyle={{ backgroundColor: "#0000ff" }}
+          />
+        </View>
       </View>
     );
   }
@@ -106,5 +133,18 @@ interface HeatmapPoint extends LatLng {
     map: {
       ...StyleSheet.absoluteFillObject,
     },
+    sliderContainer: {
+      position: "absolute",
+      bottom: 50,
+      left: 20,
+      right: 20,
+      backgroundColor: "white",
+      padding: 10,
+      borderRadius: 10,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 5,
+    },
   });
-  
