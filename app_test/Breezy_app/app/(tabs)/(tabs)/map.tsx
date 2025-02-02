@@ -44,11 +44,36 @@ interface HeatmapPoint extends LatLng {
             return;
           }
       
-          const formattedData = data.map((point: any) => ({
+          let formattedData = data.map((point: any) => ({
             latitude: parseFloat(point.latitude),
             longitude: parseFloat(point.longitude),
             weight: parseFloat(point.weight),
           }));
+  
+          if (true) {
+            if (formattedData.length > 100) {
+              const step = formattedData.length / 99; 
+              let interpolatedData = [];
+            
+              for (let i = 0; i < 100; i++) {
+                const idx = i * step;
+                const lowerIdx = Math.floor(idx);
+                const upperIdx = Math.ceil(idx);
+            
+                if (upperIdx >= formattedData.length) {
+                  interpolatedData.push(formattedData[lowerIdx]);
+                } else {
+                  const ratio = idx - lowerIdx;
+                  interpolatedData.push({
+                    latitude: formattedData[lowerIdx].latitude * (1 - ratio) + formattedData[upperIdx].latitude * ratio,
+                    longitude: formattedData[lowerIdx].longitude * (1 - ratio) + formattedData[upperIdx].longitude * ratio,
+                    weight: formattedData[lowerIdx].weight * (1 - ratio) + formattedData[upperIdx].weight * ratio,
+                  });
+                }
+              }
+              formattedData = interpolatedData;
+            }
+          }
   
           console.log("Formatted Heatmap Data");
           setHeatmapData(formattedData); 
