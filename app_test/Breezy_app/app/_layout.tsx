@@ -31,6 +31,7 @@ function RootContent() {
         
       )}
       <Stack.Screen name="(tabs)" options={{ headerShown: false}} />
+      <Stack.Screen name="signInScreen" options={{ headerShown: false}}/>
     </Stack>
   );
 }

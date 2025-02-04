@@ -67,7 +67,7 @@ export default function HomeScreen() {
   const handleLogOut = () => {
     setCurrentUser(null);
     setMenuVisible(false);
-    router.replace("./(tabs)");
+    router.replace("/signInScreen")
   };
 
   return (
