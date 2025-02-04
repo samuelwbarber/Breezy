@@ -1,11 +1,10 @@
 import { Tabs } from 'expo-router';
-import {UserProvider} from '@/app/UserContext';
+import { UserProvider } from '@/app/context/userContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 
 export default function TabLayout() {
   return (
-    <UserProvider>
     <Tabs
         screenOptions={{
             tabBarActiveTintColor: '#ffd33d',
@@ -14,7 +13,7 @@ export default function TabLayout() {
             borderBottomWidth: 0
             },
             headerShadowVisible: true,
-            headerTintColor: '#fff', //'#02e'
+            headerTintColor: '#fff', 
             tabBarStyle: {
             backgroundColor: '#25292e',
             borderTopWidth: 0
@@ -22,7 +21,7 @@ export default function TabLayout() {
       }}
     > 
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
@@ -39,7 +38,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
       name = "journey"
       options ={{
         title: 'Statistics',
@@ -48,8 +47,7 @@ export default function TabLayout() {
         ),
         //tabBarStyle: { display: 'none' }, // Hides the bottom tab bar when we go to journey
       }}
-      />
+      /> */}
     </Tabs>
-    </UserProvider>
   );
 }
