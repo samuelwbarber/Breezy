@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { useUser } from '../../context/userContext';
+import { useUser } from '../context/userContext';
 import { useRouter } from 'expo-router';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
@@ -67,7 +67,7 @@ export default function HomeScreen() {
   const handleLogOut = () => {
     setCurrentUser(null);
     setMenuVisible(false);
-    router.replace("/(tabs)");
+    router.replace("./(tabs)");
   };
 
   return (

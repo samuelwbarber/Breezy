@@ -1,10 +1,10 @@
   import React, { useState, useEffect } from "react";
   import { Text, View, TextInput, Button, StyleSheet, TouchableOpacity } from "react-native";
-  import { useUser } from "../context/userContext";
-  import { loginUser } from "../api/auth";
-  import { User } from "../context/user";
+  import { useUser } from "./context/userContext";
+  import { loginUser } from "./api/auth";
+  import { User } from "./context/user";
   import { useRouter } from "expo-router";
-  import { startLocationUpdates} from "../locationTask";
+  import { startLocationUpdates} from "./locationTask";
 
 
   export default function SignInScreen() {
@@ -40,7 +40,7 @@
           setCurrentUser(testUser);
           setMessage("Logged in as Bob!");
           startLocationUpdates(testUser.id);
-          router.replace("/(tabs)/(tabs)/home");
+          router.replace("/(tabs)/home");
           return;
         }
   
@@ -54,7 +54,7 @@
           setCurrentUser(loggedUser);
           console.log("Login successful!");
           startLocationUpdates(loggedUser.id);
-          router.replace("/(tabs)/(tabs)/home");
+          router.replace("/(tabs)/home");
         } catch (error) {
           console.error("Login failed:", error);
           setMessage("Error logging in.");
@@ -86,7 +86,7 @@
           // Optionally, call an API: await createUser(email, password);
           setCurrentUser(newUser);
           setMessage("Account created and logged in!");
-          router.replace("/(tabs)/(tabs)/home");
+          router.replace("/(tabs)/home");
         } catch (error) {
           console.error("Account creation failed:", error);
           setMessage("Error creating account.");
@@ -134,7 +134,7 @@
         ) : (
           <>
             <Text>Welcome, {currentUser.name}!</Text>
-            <Button title="Log Out" onPress={() => setCurrentUser(null)} />
+            <Button title="Go to your Home Page" onPress={() => router.replace("/(tabs)/home")} />
           </>
         )}
       </View>
