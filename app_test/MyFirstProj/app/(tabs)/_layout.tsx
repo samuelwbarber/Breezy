@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import {UserProvider} from '@/app/UserContext';
+import {UserProvider} from '@/assets/UserContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 

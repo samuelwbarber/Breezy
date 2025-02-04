@@ -1,14 +1,13 @@
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_KEY } from './keys';
+import { API_KEY } from '../assets/keys';
 import React, { useState, useEffect } from "react";
 
 //WATCH OUT!
 
-const SERVER_IP = "http://172.26.207.214"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
+const SERVER_IP = "http://172.23.23.156"; //CHANGE THIS DEPENDING ON YOUR CURRENT IP ADDRESS
 const SERVER_PORT = "3000";  
 const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/location`;
-
 
 let locationSubscription: Location.LocationSubscription | null = null;
 
@@ -26,7 +25,7 @@ export async function startLocationUpdates() {
   locationSubscription = await Location.watchPositionAsync(
     {
       accuracy: Location.Accuracy.High,
-      timeInterval: 0.005, // Update every 5 seconds
+      timeInterval: 0.1, // Update every 5 seconds
       distanceInterval: 0.001, // Update every 5 meters
     },
     async (location) => {
@@ -34,11 +33,11 @@ export async function startLocationUpdates() {
       const timestamp = new Date().toISOString().split('.')[0] + 'Z';
       const locationData = {latitude, longitude, timestamp};
 
-      console.log("New foreground location:", latitude, longitude, "at", timestamp);
+      //console.log("New foreground location:", latitude, longitude, "at", timestamp);
 
       // Save location to AsyncStorage
       try {
-        console.log("Sending request:", JSON.stringify(locationData));
+        //console.log("Sending request:", JSON.stringify(locationData));
         await AsyncStorage.setItem(
           "currentLocation",
           JSON.stringify(locationData)

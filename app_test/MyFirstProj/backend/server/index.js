@@ -19,17 +19,6 @@ const db = mysql.createPool({
   queueLimit: 0             // Allow unlimited queued connections
 });
 
-// Test pool connection
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error('Database connection failed:', err.stack);
-    return;
-  }
-  console.log('Connected to MySQL as id ' + connection.threadId);
-  connection.release(); // Release the connection back to the pool
-});
-
-
 // //Single MySQL connection
 // const db = mysql.createConnection({
 //   host: '18.134.180.224',  
@@ -37,6 +26,17 @@ db.getConnection((err, connection) => {
 //   password: 'Embedded2025!',
 //   database: 'DB2',
 // });
+
+// Test pool connection
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error('Database connection failed:', err.stack);
+    return;
+  }
+  console.log('Connected to MySQL as id ' + connection.threadId);
+});
+
+
 
 // //Test DB connection
 // db.connect(err => {
@@ -56,6 +56,7 @@ app.get('/getData', (req, res) => {
       res.status(200).json(results);
     }
   });
+  
 });
 
 
@@ -93,7 +94,8 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: "Database query failed" });
     
   }
-  connection.release();
+
+
 });
 
 
@@ -119,13 +121,15 @@ app.get('/user-data/:userId', async (req, res) => {
 
       res.json(transformedData);
       console.log("Retrieved Heatmap Data");
+      console.log("Transformed Data:", transformedData);
     });
 
   } catch (err) {
     console.error("Unexpected server error:", err);
     res.status(500).json({ error: "Server error" });
   }
-  connection.release();
+
+  
 });
 
 function calculateWeight(eco2, tvoc) {
@@ -171,6 +175,7 @@ app.get('/user-data-by-email/:email', async (req, res) => {
         }));
 
         res.json(transformedData);
+        console.log(transformedData);
         console.log("Retrieved Heatmap Data");
 
       });
@@ -180,7 +185,9 @@ app.get('/user-data-by-email/:email', async (req, res) => {
     console.error("Unexpected server error:", err);
     res.status(500).json({ error: "Server error" });
   }
-  connection.release();
+
+ 
+  
 });
 
 app.post('/location', async (req, res) => {
@@ -202,7 +209,8 @@ app.post('/location', async (req, res) => {
     console.log('Location data inserted successfully');
     res.status(201).json({ message: 'Location data stored successfully' });
   });
-  connection.release();
+
+  
 });
 
 // Start the server

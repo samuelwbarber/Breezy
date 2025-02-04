@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Text,StyleSheet, View, ActivityIndicator } from "react-native";
 import MapView, { Heatmap, LatLng } from "react-native-maps";
-import { useUser } from "@/app/UserContext";
-import {User} from "@/app/user"
+import { useUser } from "@/assets/UserContext";
+import {User} from "@/assets/user"
 
-const SERVER_IP = "http://172.26.207.214"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
+const SERVER_IP = "http://172.23.23.156"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
 const SERVER_PORT = "3000";  
 const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}`;
 
@@ -13,9 +13,9 @@ interface HeatmapPoint extends LatLng {
 }
 
 export default function MapScreen() {
+
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
   const { currentUser } = useUser();
-
 
   useEffect(() => {
 
@@ -23,10 +23,11 @@ export default function MapScreen() {
     const fetchHeatmapData = async () => {
       if (!currentUser) {
         console.warn("No current user found.");
+        setHeatmapData([{ latitude: 51.5074, longitude: -0.1278, weight: 20 }]);
         return;
       }
     
-      console.log(`Fetching hellooooo for user: ${currentUser.email}`);
+      console.log(`Fetching Map for user: ${currentUser.email}`);
     
       try {
         const response = await fetch(`${SERVER_URL}/user-data/cyclist_001`);
@@ -41,6 +42,7 @@ export default function MapScreen() {
     
         if (Array.isArray(data) && data.length === 0) {
           console.warn("No points found for the user.");
+          setHeatmapData([{ latitude: 51.5074, longitude: -0.1278, weight: 20 }]);
           return;
         }
     
@@ -48,10 +50,13 @@ export default function MapScreen() {
         const formattedData = data.map((point: any) => ({
           latitude: parseFloat(point.latitude),
           longitude: parseFloat(point.longitude),
-          weight: parseFloat(point.weight), // Ensure weight is a float, not string
+          weight: parseFloat(point.weight) + 5.0, // Ensure weight is a float, not string
         }));
-    
+
+        console.log("Formatted Heatmap Data");
         setHeatmapData(formattedData); 
+        console.log("Set Heatmap Data")
+        console.log(heatmapData);
     
       } catch (error) {
         console.error("Error fetching heatmap data:", error);
