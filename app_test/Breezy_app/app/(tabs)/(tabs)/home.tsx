@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { useUser } from '../../context/userContext';
 import { useRouter } from 'expo-router';
-import { LineChart } from 'react-native-chart-kit';
-import { Ionicons } from '@expo/vector-icons'; // Importing vector icons
+import { LineChart, BarChart } from 'react-native-chart-kit';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen() {
   const { currentUser, setCurrentUser } = useUser();
@@ -23,9 +23,19 @@ export default function HomeScreen() {
   const n = 5; // Number of recent recordings to display
   const recentRecordings = recordings.slice(-n);
 
-  // Extract labels and data points for the chart
-  const labels = recentRecordings.map(record => record[0]);
-  const dataPoints = recentRecordings.map(record => parseFloat(record[1]));
+  // Extract labels and data points for the line chart
+  const lineLabels = recentRecordings.map(record => record[0]);
+  const lineDataPoints = recentRecordings.map(record => parseFloat(record[1]));
+
+  // Sample data for the bar chart (total pollution for the week)
+  const barData = {
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    datasets: [
+      {
+        data: [120, 140, 110, 160, 150, 130, 170], // Made-up totals for each day
+      },
+    ],
+  };
 
   useEffect(() => {
     if (currentUser) {
@@ -45,15 +55,13 @@ export default function HomeScreen() {
 
   // Handlers for the menu options
   const handleAccount = () => {
-    // Placeholder for account functionality
     console.log("Account tapped");
     setMenuVisible(false);
   };
 
   const handlePairDevice = () => {
-    // Placeholder for pair device functionality
-    console.log("Pair Device tapped");
     setMenuVisible(false);
+    router.push('/pair_device');
   };
 
   const handleLogOut = () => {
@@ -68,22 +76,22 @@ export default function HomeScreen() {
       <View style={styles.topBar}>
         <Text style={styles.header}>Welcome, {currentUser.name}!!</Text>
         <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.iconButton}>
-          <Ionicons name="ios-settings" size={28} color="black" />
+          <Ionicons name="settings-outline" size={28} color="black" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.windowsContainer}>
+      {/* Scrollable Content */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Window 1: Recordings Table */}
         <View style={styles.window}>
           <Text style={styles.windowHeader}>Recordings</Text>
           <View style={styles.table}>
-            {/* Table header */}
             <View style={[styles.tableRow, styles.tableHeader]}>
               <Text style={[styles.tableCell, styles.tableHeaderCell]}>Time</Text>
               <Text style={[styles.tableCell, styles.tableHeaderCell]}>Pollution Intake</Text>
             </View>
-            {/* Table body */}
-            <ScrollView style={{ maxHeight: 150 }}>
+            {/* Add nestedScrollEnabled here for the inner ScrollView */}
+            <ScrollView style={{ maxHeight: 150 }} nestedScrollEnabled={true}>
               {recentRecordings.map((record, index) => (
                 <View key={index} style={styles.tableRow}>
                   <Text style={styles.tableCell}>{record[0]}</Text>
@@ -100,8 +108,8 @@ export default function HomeScreen() {
           <ScrollView horizontal>
             <LineChart
               data={{
-                labels: labels,
-                datasets: [{ data: dataPoints }],
+                labels: lineLabels,
+                datasets: [{ data: lineDataPoints }],
               }}
               width={300} // Adjust the width as needed
               height={220}
@@ -114,9 +122,7 @@ export default function HomeScreen() {
                 decimalPlaces: 2,
                 color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                style: {
-                  borderRadius: 16,
-                },
+                style: { borderRadius: 16 },
                 propsForDots: {
                   r: "6",
                   strokeWidth: "2",
@@ -124,14 +130,38 @@ export default function HomeScreen() {
                 },
               }}
               bezier
-              style={{
-                marginVertical: 8,
-                borderRadius: 16,
-              }}
+              style={{ marginVertical: 8, borderRadius: 16 }}
             />
           </ScrollView>
         </View>
-      </View>
+
+        {/* Window 3: Bar Chart for Total Pollution for the Week */}
+        <View style={styles.window}>
+          <Text style={styles.windowHeader}>Total Pollution for the Week</Text>
+          <BarChart
+            data={barData}
+            width={300}
+            height={220}
+            yAxisSuffix=""
+            chartConfig={{
+              backgroundColor: "#fff",
+              backgroundGradientFrom: "#fff",
+              backgroundGradientTo: "#fff",
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              style: { borderRadius: 16 },
+            }}
+            style={{ marginVertical: 8, borderRadius: 16 }}
+          />
+        </View>
+
+        {/* Window 4: Placeholder Window */}
+        <View style={styles.window}>
+          <Text style={styles.windowHeader}>Additional Window</Text>
+          <Text style={styles.placeholderText}>This is a placeholder window.</Text>
+        </View>
+      </ScrollView>
 
       {/* Menu Modal */}
       <Modal
@@ -164,6 +194,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FCFF',
     paddingTop: 40, // Leave space for the top bar
   },
+  scrollContainer: {
+    padding: 16,
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -179,23 +214,15 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 8,
   },
-  windowsContainer: {
-    flex: 1,
-    padding: 16,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
   window: {
     width: '100%',
     backgroundColor: '#fff',
     padding: 16,
     marginVertical: 8,
     borderRadius: 8,
-    // iOS shadow
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    // Android shadow
     elevation: 3,
   },
   windowHeader: {
@@ -224,6 +251,10 @@ const styles = StyleSheet.create({
   tableHeaderCell: {
     fontWeight: 'bold',
   },
+  placeholderText: {
+    fontSize: 16,
+    color: '#555',
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.3)',
@@ -237,11 +268,9 @@ const styles = StyleSheet.create({
     marginRight: 16,
     paddingVertical: 8,
     minWidth: 150,
-    // Shadow for iOS
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowRadius: 5,
-    // Elevation for Android
     elevation: 5,
   },
   menuItem: {
