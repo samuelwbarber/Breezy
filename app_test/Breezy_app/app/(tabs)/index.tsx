@@ -4,6 +4,7 @@ import { useUser } from "../context/userContext";
 import { loginUser } from "../api/auth";
 import { User } from "../context/user";
 import { useRouter } from "expo-router";
+import { startLocationUpdates } from "../locationTask";
 
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
@@ -22,6 +23,7 @@ export default function SignInScreen() {
       const testUser = new User("cyclist_001", "John Doe", "john.cyclist@example.com");
       setCurrentUser(testUser);
       setMessage("Logged in as Bob!");
+      startLocationUpdates(testUser.id);
       router.replace("/(tabs)/(tabs)/home");
       return;
     }
@@ -36,6 +38,8 @@ export default function SignInScreen() {
 
       setCurrentUser(loggedUser);
       console.log("Login successful!");
+      startLocationUpdates(loggedUser.id);
+      
       router.replace("/(tabs)/(tabs)/home")
     } catch (error) {
       console.error("Login failed:", error);
@@ -66,7 +70,7 @@ export default function SignInScreen() {
       ) : (
         <>
           <Text>Welcome, {currentUser.name}!</Text>
-          <Button title="Log Out" onPress={() => setCurrentUser(null)} />
+          <Button title="Go to Home" onPress={() => router.replace("/(tabs)/(tabs)/home")} />
         </>
       )}
     </View>
