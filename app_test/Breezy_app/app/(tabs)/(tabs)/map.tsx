@@ -3,8 +3,8 @@ import { Text, StyleSheet, View, ActivityIndicator, TouchableOpacity } from "rea
 import MapView, { Heatmap, LatLng } from "react-native-maps";
 import { useUser } from "@/app/context/userContext";
 import { SERVER_URL } from "@/app/config";
-import MultiSlider from '@ptomasroos/react-native-multi-slider';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import MultiSlider from "@ptomasroos/react-native-multi-slider";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface HeatmapPoint extends LatLng {
   weight: number;
@@ -16,7 +16,7 @@ export default function MapScreen() {
   const [range, setRange] = useState([0, 24]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [loading, setLoading] = useState(true); // ✅ Start with loading
+  const [loading, setLoading] = useState(true); // Start with loading
 
   useEffect(() => {
     const fetchHeatmapData = async () => {
@@ -28,7 +28,7 @@ export default function MapScreen() {
       }
 
       console.log(`Fetching Map for ${currentUser.name} at ${SERVER_URL}`);
-      setLoading(true); // ✅ Set loading true when fetching starts
+      setLoading(true); // Set loading true when fetching starts
 
       try {
         const response = await fetch(`${SERVER_URL}/user-data/${currentUser.id}`);
@@ -52,30 +52,38 @@ export default function MapScreen() {
           weight: parseFloat(point.weight),
         }));
 
-        // ✅ Limit data to 100 points
+        // Limit data to 100 points
         if (formattedData.length > 100) {
           formattedData = formattedData.slice(0, 100);
         }
 
         console.log("Formatted Heatmap Data");
         setHeatmapData(formattedData);
-        setLoading(false); // ✅ Set loading false after data is fully set
+        setLoading(false);
 
       } catch (error) {
         console.error("Error fetching heatmap data:", error);
-        setLoading(false); // ✅ Make sure loading is stopped even on error
+        setLoading(false);
       }
     };
 
     fetchHeatmapData();
-  }, [currentUser]); // ✅ Dependency to re-run if user changes
+  }, [currentUser]);
 
-  // ✅ Debugging: Log heatmap data when updated
+  // Debug: Log heatmap data when updated
   useEffect(() => {
     console.log("Updated heatmap data:", heatmapData.length);
   }, [heatmapData]);
 
-  // ✅ Loading Page (Prevents Map from Rendering Before Data is Ready)
+  // Format date as DD/MM/YY
+  const formatDate = (date: Date) => {
+    const dd = String(date.getDate()).padStart(2, "0");
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const yy = String(date.getFullYear()).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+  };
+
+  // Show loading indicator while fetching data
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -103,11 +111,15 @@ export default function MapScreen() {
         )}
       </MapView>
 
-      {/* Date Picker and Multi-range slider for time selection */}
+      {/* Updated Slider Container */}
       <View style={styles.sliderContainer}>
-        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-          <Text style={{ color: 'blue', textDecorationLine: 'underline' }}>
-            Select Date: <Text>{selectedDate.toDateString()}</Text>
+        {/* Date Selector Button */}
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {formatDate(selectedDate)}
           </Text>
         </TouchableOpacity>
         {showDatePicker && (
@@ -121,16 +133,19 @@ export default function MapScreen() {
             }}
           />
         )}
-        <Text>Selected Time Range: {range[0]}:00 - {range[1]}:00</Text>
+        <Text style={styles.sliderLabel}>
+          Selected Time Range: {range[0]}:00 - {range[1]}:00
+        </Text>
         <MultiSlider
           values={range}
           min={0}
           max={24}
           step={1}
           onValuesChange={setRange}
-          selectedStyle={{ backgroundColor: "#0000ff" }}
+          selectedStyle={{ backgroundColor: "#6C757D" }}  
           unselectedStyle={{ backgroundColor: "#cccccc" }}
-          markerStyle={{ backgroundColor: "#0000ff" }}
+          markerStyle={{ backgroundColor: "#6C757D", height: 20, width: 20 }}
+          sliderLength={300}
         />
       </View>
     </View>
@@ -146,17 +161,34 @@ const styles = StyleSheet.create({
   },
   sliderContainer: {
     position: "absolute",
-    bottom: 50,
+    bottom: 30,
     left: 20,
     right: 20,
     backgroundColor: "white",
-    padding: 10,
-    borderRadius: 10,
+    padding: 20,
+    borderRadius: 15,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
     shadowRadius: 5,
+    elevation: 5,
+  },
+  dateButton: {
+    backgroundColor: "#6C757D", // Cooler gray color
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  dateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  sliderLabel: {
+    fontSize: 16,
+    marginBottom: 10,
   },
   loadingContainer: {
     flex: 1,
