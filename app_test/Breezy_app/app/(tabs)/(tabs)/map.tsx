@@ -113,7 +113,7 @@ interface HeatmapPoint extends LatLng {
           }}
         >
           {heatmapData.length > 1 ? (
-            <Heatmap points={heatmapData.slice(0, 50)} /> 
+            <Heatmap points={heatmapData} /> 
           ) : (
             <Text>No heatmap data available</Text>
           )}
