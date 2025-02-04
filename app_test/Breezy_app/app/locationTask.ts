@@ -1,18 +1,16 @@
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_KEY } from '../assets/keys';
-import React, { useState, useEffect } from "react";
-
-//WATCH OUT!
-
-const SERVER_IP = "http://172.23.23.156"; //CHANGE THIS DEPENDING ON YOUR CURRENT IP ADDRESS
-const SERVER_PORT = "3000";  
-const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/location`;
+import { SERVER_URL } from "./config";
 
 let locationSubscription: Location.LocationSubscription | null = null;
 
-export async function startLocationUpdates() {
+export async function startLocationUpdates(userId: string) {
   console.log("Requesting foreground location updates...");
+
+  if (!userId) {
+    console.error("User ID is required for location updates.");
+    return;
+  }
 
   // Request location permission
   const { status } = await Location.requestForegroundPermissionsAsync();
@@ -21,60 +19,54 @@ export async function startLocationUpdates() {
     return;
   }
 
+  const LOCATION_URL = `${SERVER_URL}/location-data/${userId}`;
+
   // Start watching the user's location in the foreground
   locationSubscription = await Location.watchPositionAsync(
     {
       accuracy: Location.Accuracy.High,
-      timeInterval: 0.1, // Update every 5 seconds
-      distanceInterval: 0.001, // Update every 5 meters
+      timeInterval: 5000, // Update every 5 seconds
+      distanceInterval: 5, // Update every 1 meter
     },
     async (location) => {
       const { latitude, longitude } = location.coords;
-      const timestamp = new Date().toISOString().split('.')[0] + 'Z';
-      const locationData = {latitude, longitude, timestamp};
+      const timestamp = new Date().toISOString().split(".")[0] + "Z";
+      const locationData = { latitude, longitude, timestamp };
 
-      //console.log("New foreground location:", latitude, longitude, "at", timestamp);
+      console.log("New foreground location:", latitude, longitude, "at", timestamp);
 
       // Save location to AsyncStorage
       try {
-        //console.log("Sending request:", JSON.stringify(locationData));
-        await AsyncStorage.setItem(
-          "currentLocation",
-          JSON.stringify(locationData)
-        );
+        await AsyncStorage.setItem("currentLocation", JSON.stringify(locationData));
       } catch (e) {
         console.error("Failed to save location:", e);
       }
 
-       // Send to backend
-       try { 
-        const response = await fetch (SERVER_URL, {
-          method: 'POST',
+      // Send to backend
+      try {
+        const response = await fetch(LOCATION_URL, {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(locationData),
         });
 
-
         if (!response.ok) {
-          const errorText = await response.text(); 
+          const errorText = await response.text();
           console.error("Server error:", response.status, errorText);
           throw new Error(`Server responded with status ${response.status}`);
         }
 
-        console.log('Location successfully sent to server');
+        console.log("Location successfully sent to server");
       } catch (e) {
-        console.error('Failed to send location to server:', e);
+        console.error("Failed to send location to server:", e);
       }
-
-
     }
   );
 
   console.log("Foreground location tracking started.");
 }
-
 
 export function stopLocationUpdates() {
   if (locationSubscription) {

@@ -71,6 +71,36 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.post('/location-data/:userId', async (req, res) => {
+  
+  const userId = req.params.userId;
+  const { latitude, longitude, timestamp } = req.body;
+  const formattedTimestamp = new Date(timestamp).toISOString().slice(0, 19).replace("T", " ");
+
+  if ( !latitude || !longitude || !timestamp ) {
+    return res.status(400).json({ error: 'Missing required data' });
+  }
+
+  try {
+    
+    const query = 'INSERT INTO ENTRY (ID, LONGITUDE, LATITUDE, ENTRY_TIME, ECO2, TVOC) VALUES (?, ?, ?, ?, NULL, NULL);';
+    db.query(query, [userId, longitude, latitude, formattedTimestamp], (err, results) => {
+      if (err) {
+        console.error('Error inserting location data:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      console.log('Location data inserted successfully');
+      res.status(201).json({ message: 'Location data stored successfully' });
+    });
+
+  } catch (err){
+    console.error("Unexpected server error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+
+
+});
+
 
 // Retreive Heatmap Data
 app.get('/user-data/:userId', async (req, res) => {
@@ -107,7 +137,7 @@ app.get('/user-data/:userId', async (req, res) => {
 
 function calculateWeight(eco2, tvoc) {
   if (!eco2 || !tvoc) return 0.1*100; 
-  return Math.max(1, (tvoc / 10) + (eco2 / 50)); // Scale appropriately
+  return Math.max(1, (tvoc / 10) + (eco2 / 50)); // Scale appropriately -idk yet what to do for this
 }
 
 

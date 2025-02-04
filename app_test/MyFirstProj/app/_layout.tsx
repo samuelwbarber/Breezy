@@ -1,9 +1,9 @@
 import { Stack } from 'expo-router';
 import React, { useEffect } from 'react';
 import { startLocationUpdates } from './locationTask';
-import { UserProvider } from './UserContext';
+import { UserProvider } from '../assets/UserContext';
 
-const SERVER_IP = "http://18.134.180.224"; // Replace with your server's IP address
+const SERVER_IP = "http://172.23.23.156"; // Replace with your server's IP address
 const SERVER_PORT = "3000"; // The port where your server is running
 const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/getData`;
 

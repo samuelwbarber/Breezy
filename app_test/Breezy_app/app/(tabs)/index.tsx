@@ -4,6 +4,7 @@
   import { loginUser } from "../api/auth";
   import { User } from "../context/user";
   import { useRouter } from "expo-router";
+  import { startLocationUpdates} from "../locationTask";
 
 
   export default function SignInScreen() {
@@ -21,7 +22,7 @@
     }, [currentUser]);
   
     // A simple password validator: at least 8 characters, one number, one special character.
-    const isValidPassword = (pass) => {
+    const isValidPassword = (pass: string) => {
       const lengthRequirement = pass.length >= 8;
       const numberRequirement = /[0-9]/.test(pass);
       const specialCharRequirement = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
@@ -38,6 +39,7 @@
           const testUser = new User("cyclist_001", "John Doe", "john.cyclist@example.com");
           setCurrentUser(testUser);
           setMessage("Logged in as Bob!");
+          startLocationUpdates(testUser.id);
           router.replace("/(tabs)/(tabs)/home");
           return;
         }
@@ -51,6 +53,7 @@
           }
           setCurrentUser(loggedUser);
           console.log("Login successful!");
+          startLocationUpdates(loggedUser.id);
           router.replace("/(tabs)/(tabs)/home");
         } catch (error) {
           console.error("Login failed:", error);

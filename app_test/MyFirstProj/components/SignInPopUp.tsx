@@ -1,7 +1,7 @@
-import { User } from "@/app/user";
+import { User } from "@/assets/user";
 import React, { useState } from "react";
 import { Text, View, TextInput, Button, StyleSheet } from "react-native";
-import { useUser } from "@/app/UserContext";
+import { useUser } from "@/assets/UserContext";
 import { useEffect } from "react";
 
 export default function App() {
@@ -10,7 +10,7 @@ export default function App() {
   const { currentUser, setCurrentUser } = useUser();
   const [message, setMessage] = useState("");
 
-  const SERVER_IP = "http://172.26.207.214"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
+  const SERVER_IP = "http://172.23.23.156"; //CHANGE THIS DEPENDING ON YOUR DEVICE IP
   const SERVER_PORT = "3000";  
   const SERVER_URL = `${SERVER_IP}:${SERVER_PORT}/login`;
 
