@@ -39,6 +39,7 @@ export default function MapScreen() {
         }
 
         const data = await response.json();
+        // console.log("Fetched Data:", data);
         if (Array.isArray(data) && data.length === 0) {
           console.warn("No points found for the user.");
           setHeatmapData([{ latitude: 51.5074, longitude: -0.1278, weight: 20 }]);
@@ -52,12 +53,14 @@ export default function MapScreen() {
           weight: parseFloat(point.weight),
         }));
 
+        console.log("Formatted Heatmap Data:", formattedData);
+
         // Limit data to 100 points
         if (formattedData.length > 100) {
-          formattedData = formattedData.slice(0, 100);
+          formattedData = formattedData.slice(100, 200);
         }
 
-        console.log("Formatted Heatmap Data");
+        // console.log("Formatted Heatmap Data");
         setHeatmapData(formattedData);
         setLoading(false);
 

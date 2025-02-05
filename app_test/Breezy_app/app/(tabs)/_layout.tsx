@@ -1,34 +1,53 @@
-import { Stack } from "expo-router";
-import { UserProvider } from "../context/userContext";
-import { useUser } from "../context/userContext";
-import React, { useEffect } from "react";
+import { Tabs } from 'expo-router';
+import { UserProvider } from '@/app/context/userContext';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
-export default function RootLayout() {
+
+export default function TabLayout() {
   return (
-    <UserProvider>
-      <RootContent />
-    </UserProvider>
-  );
-}
-
-function RootContent() {
-  const { currentUser } = useUser(); 
-
-  useEffect(() => {
-    if (currentUser) {
-      console.log("User logged in:", currentUser);
-    } else {
-      console.log("User logged out");
-    }
-  }, [currentUser]); // This runs every time currentUser changes
-
-  return (
-    <Stack>
-      {currentUser == null ? (
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-      ) : (
-        <Stack.Screen name="(tabs)/home" options={{ headerShown: false }} />
-      )}
-    </Stack>
+    <Tabs
+        screenOptions={{
+            tabBarActiveTintColor: '#ffd33d',
+            headerStyle: {
+            backgroundColor: '#25292e',
+            borderBottomWidth: 0
+            },
+            headerShadowVisible: true,
+            headerTintColor: '#fff', 
+            tabBarStyle: {
+            backgroundColor: '#25292e',
+            borderTopWidth: 0
+            },
+      }}
+    > 
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Map',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'map' : 'map-outline'} color={color} size={24}/>
+          ),
+        }}
+      />
+      {/* <Tabs.Screen
+      name = "journey"
+      options ={{
+        title: 'Statistics',
+        tabBarIcon: ({color, focused}) => (
+          <Ionicons name={focused ? 'stats-chart': 'stats-chart-outline'} color={color} size={24}/>
+        ),
+        //tabBarStyle: { display: 'none' }, // Hides the bottom tab bar when we go to journey
+      }}
+      /> */}
+    </Tabs>
   );
 }
