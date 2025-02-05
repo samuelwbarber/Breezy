@@ -8,6 +8,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface HeatmapPoint extends LatLng {
   weight: number;
+  timestamp?: Date;
 }
 
 export default function MapScreen() {
@@ -22,15 +23,21 @@ export default function MapScreen() {
     const fetchHeatmapData = async () => {
       if (!currentUser) {
         console.warn("No current user found.");
-        setHeatmapData([{ latitude: 51.5074, longitude: -0.1278, weight: 20 }]);
+        setHeatmapData([{ 
+          latitude: 51.5074,
+          longitude: -0.1278,
+          weight: 20,
+          timestamp: new Date(),
+        }]);
         setLoading(false);
         return;
       }
 
       console.log(`Fetching Map for ${currentUser.name} at ${SERVER_URL}`);
       setLoading(true); // Set loading true when fetching starts
-
+      console.log("Loading Heatmap Data for User:", currentUser.id);
       try {
+        console.log("Fetching Heatmap Data for User:", currentUser.id);
         const response = await fetch(`${SERVER_URL}/user-data/${currentUser.id}`);
         console.log("API Response Status:", response.status);
         if (!response.ok) {
@@ -39,10 +46,15 @@ export default function MapScreen() {
         }
 
         const data = await response.json();
-        // console.log("Fetched Data:", data);
+        console.log("Fetched Data length:", data.length);
         if (Array.isArray(data) && data.length === 0) {
           console.warn("No points found for the user.");
-          setHeatmapData([{ latitude: 51.5074, longitude: -0.1278, weight: 20 }]);
+          setHeatmapData([{ 
+            latitude: 51.5074,
+            longitude: -0.1278,
+            weight: 20,
+            timestamp: new Date(),
+           }]);
           setLoading(false);
           return;
         }
@@ -51,16 +63,42 @@ export default function MapScreen() {
           latitude: parseFloat(point.latitude),
           longitude: parseFloat(point.longitude),
           weight: parseFloat(point.weight),
+          timestamp: new Date(point.timestamp),
         }));
+        
+        const startDateTime = new Date(selectedDate);
+        startDateTime.setHours(range[0], 0, 0, 0);
+      
+        const endDateTime = new Date(selectedDate);
+        endDateTime.setHours(range[1], 0, 0, 0);
 
-        console.log("Formatted Heatmap Data:", formattedData);
 
+        console.log("Start Date:", startDateTime);
+        console.log("End Date:", endDateTime);
+        // Filter data points that fall between the start and end times.
+        formattedData = formattedData.filter((point: any) => {
+          return point.timestamp >= startDateTime && point.timestamp <= endDateTime;
+        });
+
+
+        // console.log("Formatted Heatmap Data:", formattedData);
         // Limit data to 100 points
-        if (formattedData.length > 100) {
-          formattedData = formattedData.slice(100, 200);
-        }
+        // if (formattedData.length > 100) {
+        //   formattedData = formattedData.slice(0, 50);
+        // }
 
         // console.log("Formatted Heatmap Data");
+        if (formattedData.length === 0) {
+          console.warn("No points found for the selected date and time range.");
+          setHeatmapData([{ 
+            latitude: 51.5074,
+            longitude: -0.1278,
+            weight: 20,
+            timestamp: new Date(),
+          }]);
+          setLoading(false);
+          return;
+        }
         setHeatmapData(formattedData);
         setLoading(false);
 
@@ -71,7 +109,7 @@ export default function MapScreen() {
     };
 
     fetchHeatmapData();
-  }, [currentUser]);
+  }, [currentUser, selectedDate, range]);
 
   // Debug: Log heatmap data when updated
   useEffect(() => {

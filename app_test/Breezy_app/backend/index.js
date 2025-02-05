@@ -108,35 +108,35 @@ app.get('/user-data/:userId', async (req, res) => {
 
   try {
     
-    //const query = `SELECT LONGITUDE, LATITUDE, ECO2, TVOC FROM ENTRY WHERE ID = ?`;
+    const query = `SELECT LONGITUDE, LATITUDE, ECO2, TVOC, ENTRY_TIME FROM ENTRY WHERE ID = ?`;
 
-    const query = `
-                  WITH GridEntries AS (
-                      SELECT 
-                          ID,
-                          LONGITUDE,
-                          LATITUDE,
-                          ENTRY_TIME,
-                          ECO2,
-                          TVOC,
-                          ROUND(LONGITUDE, 4) AS lon_grid,
-                          ROUND(LATITUDE, 4) AS lat_grid,
-                          ROW_NUMBER() OVER (
-                              PARTITION BY ROUND(LONGITUDE, 4), ROUND(LATITUDE, 4) 
-                              ORDER BY ENTRY_TIME DESC
-                          ) AS rn
-                      FROM ENTRY
-                  )
-                  SELECT 
-                      ID, 
-                      LONGITUDE, 
-                      LATITUDE, 
-                      ENTRY_TIME, 
-                      ECO2, 
-                      TVOC
-                  FROM GridEntries
-                  WHERE rn = 1;
-                  `;
+    // const query = `
+    //               WITH GridEntries AS (
+    //                   SELECT 
+    //                       ID,
+    //                       LONGITUDE,
+    //                       LATITUDE,
+    //                       ENTRY_TIME,
+    //                       ECO2,
+    //                       TVOC,
+    //                       ROUND(LONGITUDE, 4) AS lon_grid,
+    //                       ROUND(LATITUDE, 4) AS lat_grid,
+    //                       ROW_NUMBER() OVER (
+    //                           PARTITION BY ROUND(LONGITUDE, 4), ROUND(LATITUDE, 4) 
+    //                           ORDER BY ENTRY_TIME DESC
+    //                       ) AS rn
+    //                   FROM ENTRY
+    //               )
+    //               SELECT 
+    //                   ID, 
+    //                   LONGITUDE, 
+    //                   LATITUDE, 
+    //                   ENTRY_TIME, 
+    //                   ECO2, 
+    //                   TVOC
+    //               FROM GridEntries
+    //               WHERE rn = 1;
+    //               `;
 
 
     
