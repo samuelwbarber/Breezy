@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import { Text, StyleSheet, View, ActivityIndicator, TouchableOpacity } from "react-native";
 import MapView, { Heatmap, LatLng } from "react-native-maps";
 import { useUser } from "@/app/context/userContext";
@@ -13,6 +13,7 @@ interface HeatmapPoint extends LatLng {
 
 export default function MapScreen() {
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
+  //const [filteredData, setFilteredData] = useState<HeatmapPoint[]>([]);
   const { currentUser } = useUser();
   const [range, setRange] = useState([0, 24]);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -21,6 +22,9 @@ export default function MapScreen() {
 
   useEffect(() => {
     const fetchHeatmapData = async () => {
+
+      setLoading(true);
+
       if (!currentUser) {
         console.warn("No current user found.");
         setHeatmapData([{ 
@@ -34,7 +38,7 @@ export default function MapScreen() {
       }
 
       console.log(`Fetching Map for ${currentUser.name} at ${SERVER_URL}`);
-      setLoading(true); // Set loading true when fetching starts
+      //setLoading(true); // Set loading true when fetching starts
       console.log("Loading Heatmap Data for User:", currentUser.id);
       try {
         console.log("Fetching Heatmap Data for User:", currentUser.id);
@@ -109,12 +113,34 @@ export default function MapScreen() {
     };
 
     fetchHeatmapData();
-  }, [currentUser, selectedDate, range]);
+  }, [currentUser, selectedDate]); //,range
 
   // Debug: Log heatmap data when updated
   useEffect(() => {
     console.log("Updated heatmap data:", heatmapData.length);
   }, [heatmapData]);
+
+  useEffect(() =>{
+
+    setLoading(true);
+
+    const startDateTime = new Date(selectedDate);
+    startDateTime.setHours(range[0], 0, 0, 0);
+      
+    const endDateTime = new Date(selectedDate);
+    endDateTime.setHours(range[1], 0, 0, 0);
+
+    let selectedData = heatmapData.filter((point: any) => {
+      return point.timestamp >= startDateTime && point.timestamp <= endDateTime;
+    });
+
+    console.log("updated time range")
+
+    setHeatmapData(selectedData);
+
+    setLoading(false);
+
+  }, [range]);
 
   // Format date as DD/MM/YY
   const formatDate = (date: Date) => {
@@ -145,10 +171,10 @@ export default function MapScreen() {
           longitudeDelta: 0.04,
         }}
       >
-        {heatmapData.length > 1 ? (
-          <Heatmap points={heatmapData} />
-        ) : (
+        {heatmapData.length == 0 ? (
           <Text>No heatmap data available</Text>
+        ) : (
+          <Heatmap points={heatmapData} />
         )}
       </MapView>
 

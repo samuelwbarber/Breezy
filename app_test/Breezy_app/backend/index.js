@@ -156,7 +156,7 @@ app.get('/user-data/:userId', async (req, res) => {
 
       res.json(transformedData);
       console.log("Retrieved Heatmap Data");
-      console.log("Transformed Data:", transformedData);
+      console.log("Transformed Data:", transformedData.length);
     });
 
   } catch (err) {
