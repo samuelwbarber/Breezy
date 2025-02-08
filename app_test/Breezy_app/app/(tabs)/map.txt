@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useLayoutEffect } from "react";
 import { Text, StyleSheet, View, ActivityIndicator, TouchableOpacity } from "react-native";
-import MapView, { Heatmap, LatLng, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Heatmap, LatLng } from "react-native-maps";
 import { useUser } from "@/app/context/userContext";
 import { SERVER_URL } from "@/app/config";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
@@ -11,82 +11,139 @@ interface HeatmapPoint extends LatLng {
   timestamp?: Date;
 }
 
-const DEFAULT_POINT = { latitude: 51.5074, longitude: -0.1278, weight: 20 };
-
 export default function MapScreen() {
-  const [rawData, setRawData] = useState<HeatmapPoint[]>([]);
-  const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([DEFAULT_POINT]);
+  const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
+  const [filteredData, setFilteredData] = useState<HeatmapPoint[]>([]);
   const { currentUser } = useUser();
   const [range, setRange] = useState([0, 24]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true); // Start with loading
 
-  // Fetch raw data from API
   useEffect(() => {
     const fetchHeatmapData = async () => {
+
+      setLoading(true);
+
       if (!currentUser) {
-        setError("No current user found.");
+        console.warn("No current user found.");
+        setHeatmapData([{ 
+          latitude: 51.5074,
+          longitude: -0.1278,
+          weight: 20,
+          timestamp: new Date(),
+        }]);
         setLoading(false);
         return;
       }
 
+      console.log(`Fetching Map for ${currentUser.name} at ${SERVER_URL}`);
+      
+      
       try {
-        setLoading(true);
-        setError(null);
-        
+        console.log("Fetching Heatmap Data for User:", currentUser.id);
         const response = await fetch(`${SERVER_URL}/user-data/${currentUser.id}`);
+  
         if (!response.ok) {
+          console.error("Error fetching heatmap data:", response.statusText);
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
-        if (!Array.isArray(data) || data.length === 0) {
-          setRawData([]);
-          setHeatmapData([DEFAULT_POINT]);
+        console.log("Fetched Data length:", data.length);
+        if (Array.isArray(data) && data.length === 0) {
+          console.warn("No points found for the user.");
+          setHeatmapData([{ 
+            latitude: 51.5074,
+            longitude: -0.1278,
+            weight: 20,
+            timestamp: new Date(),
+           }]);
           setLoading(false);
           return;
         }
 
-        const formattedData = data.map((point: any) => ({
+        let formattedData = data.map((point: any) => ({
           latitude: parseFloat(point.latitude),
           longitude: parseFloat(point.longitude),
           weight: parseFloat(point.weight),
           timestamp: new Date(point.timestamp),
         }));
+        
+        const startDateTime = new Date(selectedDate);
+        startDateTime.setHours(range[0], 0, 0, 0);
+      
+        const endDateTime = new Date(selectedDate);
+        endDateTime.setHours(range[1], 0, 0, 0);
 
-        setRawData(formattedData);
+
+        console.log("Start Date:", startDateTime);
+        console.log("End Date:", endDateTime);
+        // Filter data points that fall between the start and end times.
+        formattedData = formattedData.filter((point: any) => {
+          return point.timestamp >= startDateTime && point.timestamp <= endDateTime;
+        });
+
+
+        // console.log("Formatted Heatmap Data:", formattedData);
+        // Limit data to 100 points
+        // if (formattedData.length > 100) {
+        //   formattedData = formattedData.slice(0, 50);
+        // }
+
+        // console.log("Formatted Heatmap Data");
+        if (formattedData.length === 0) {
+          console.warn("No points found for the selected date and time range.");
+          setHeatmapData([{ 
+            latitude: 51.5074,
+            longitude: -0.1278,
+            weight: 20,
+            timestamp: new Date(),
+          }]);
+          setLoading(false);
+          return;
+        }
+        setHeatmapData(formattedData);
+        setLoading(false);
+
       } catch (error) {
-        setError(error instanceof Error ? error.message : 'An error occurred');
-        setHeatmapData([DEFAULT_POINT]);
-      } finally {
+        console.error("Error fetching heatmap data:", error);
         setLoading(false);
       }
     };
+    
+     fetchHeatmapData();
+  }, [currentUser, selectedDate]); //,range
 
-    fetchHeatmapData();
-  }, [currentUser]);
-
-  // Filter data based on selected date and time range
+  // Debug: Log heatmap data when updated
   useEffect(() => {
-    if (rawData.length === 0) return;
+    console.log("Updated heatmap data:", heatmapData.length);
+  }, [heatmapData]);
+
+  useEffect(() =>{
+
+    setLoading(true);
 
     const startDateTime = new Date(selectedDate);
     startDateTime.setHours(range[0], 0, 0, 0);
-    
+      
     const endDateTime = new Date(selectedDate);
-    endDateTime.setHours(range[1], 59, 59, 999);
+    endDateTime.setHours(range[1], 0, 0, 0);
 
-    const filteredData = rawData.filter((point) => {
-      const pointDate = point.timestamp as Date;
-      return pointDate >= startDateTime && pointDate <= endDateTime;
+    let selectedData = formattedData.filter((point: any) => {
+      return point.timestamp >= startDateTime && point.timestamp <= endDateTime;
     });
 
-    setHeatmapData(filteredData.length > 0 ? filteredData : [DEFAULT_POINT]);
-  }, [rawData, selectedDate, range]);
+    console.log("updated time range")
 
+    setHeatmapData(selectedData);
+
+
+    setLoading(false);
+
+  }, [range]);
+
+  // Format date as DD/MM/YY
   const formatDate = (date: Date) => {
     const dd = String(date.getDate()).padStart(2, "0");
     const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -94,6 +151,7 @@ export default function MapScreen() {
     return `${dd}/${mm}/${yy}`;
   };
 
+  // Show loading indicator while fetching data
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -107,7 +165,6 @@ export default function MapScreen() {
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        provider={PROVIDER_GOOGLE}
         initialRegion={{
           latitude: 51.5074,
           longitude: -0.1278,
@@ -115,11 +172,16 @@ export default function MapScreen() {
           longitudeDelta: 0.04,
         }}
       >
-        <Heatmap points={heatmapData} />
+        {heatmapData.length == 0 ? (
+          <Text>No heatmap data available</Text>
+        ) : (
+          <Heatmap points={heatmapData} />
+        )}
       </MapView>
 
+      {/* Updated Slider Container */}
       <View style={styles.sliderContainer}>
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        {/* Date Selector Button */}
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
@@ -128,7 +190,6 @@ export default function MapScreen() {
             {formatDate(selectedDate)}
           </Text>
         </TouchableOpacity>
-        
         {showDatePicker && (
           <DateTimePicker
             value={selectedDate}
@@ -140,11 +201,9 @@ export default function MapScreen() {
             }}
           />
         )}
-        
         <Text style={styles.sliderLabel}>
           Selected Time Range: {range[0]}:00 - {range[1]}:00
         </Text>
-        
         <MultiSlider
           values={range}
           min={0}
@@ -183,31 +242,8 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 10,
-  },
-  refreshButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#f8f9fa',
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  refreshButtonDisabled: {
-    opacity: 0.7,
-  },
-  refreshIcon: {
-    fontSize: 24,
-    color: '#6C757D',
-  },
   dateButton: {
-    backgroundColor: "#6C757D",
+    backgroundColor: "#6C757D", // Cooler gray color
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
@@ -227,9 +263,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  errorText: {
-    color: 'red',
-    marginBottom: 10,
-    flex: 1,
-  }
 });
