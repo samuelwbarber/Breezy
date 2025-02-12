@@ -5,6 +5,7 @@ import { useUser } from "@/app/context/userContext";
 import { SERVER_URL } from "@/app/config";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Ionicons } from "@expo/vector-icons";
 
 interface HeatmapPoint extends LatLng {
   weight: number;
@@ -22,6 +23,7 @@ export default function MapScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Fetch raw data from API
   useEffect(() => {
@@ -67,7 +69,7 @@ export default function MapScreen() {
     };
 
     fetchHeatmapData();
-  }, [currentUser]);
+  }, [currentUser, refreshKey]);
 
   // Filter data based on selected date and time range
   useEffect(() => {
@@ -105,6 +107,16 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
+
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={() => setRefreshKey((prev) => prev + 1)} // 👈 Triggers useEffect
+        >
+          <Ionicons name="refresh" style={styles.refreshIcon} />
+        </TouchableOpacity>
+      </View>
+
       <MapView
         style={styles.map}
         provider={PROVIDER_GOOGLE}
@@ -183,12 +195,18 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
+  // headerContainer: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   width: '100%',
+  //   marginBottom: 10,
+  // },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 10,
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10,
   },
   refreshButton: {
     padding: 8,
