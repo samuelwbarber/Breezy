@@ -1,4 +1,6 @@
 import { SERVER_URL } from "../config";
+import { User } from "../context/user";
+import { Message } from "../context/message";
 
 export async function loginUser(email: string) {
   try {
@@ -59,9 +61,9 @@ export async function pairDevice(deviceId: string, email: string){
   }
 }
 
-export async function fetchUserData(email: string) {
+export async function fetchUserDataForUser(user: User): Promise<User | null> {
   try {
-    const response = await fetch(`${SERVER_URL}/user-data/${email}`, {
+    const response = await fetch(`${SERVER_URL}/user-data/${user.email}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -70,7 +72,23 @@ export async function fetchUserData(email: string) {
       throw new Error("Failed to fetch user data");
     }
 
-    return await response.json();
+    const data = await response.json();
+
+    // Map the returned data to Message instances.
+    // Adjust the property names as needed if your backend uses different names.
+    const messages = data.map((entry: any) => new Message(
+      entry.coordinate.latitude,
+      entry.coordinate.longitude,
+      entry.eco2,
+      entry.tvoc,
+      new Date(entry.time) // or entry.date if that's the property name
+    ));
+
+    // console.log("Fetched user data:", messages);
+    user.messageLog = messages;
+    // console.log("Fetched userlog data:", user.messageLog);
+
+    return user;
   } catch (error) {
     console.error("Fetching user data failed:", error);
     return null;
