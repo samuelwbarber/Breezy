@@ -25,9 +25,9 @@ function RootContent() {
   return (
     <Stack>
       {currentUser == null ? (
-        <Stack.Screen name="index" options={{ headerShown: true}} />
+        <Stack.Screen name="index" options={{ headerShown: false}} />
       ) : (
-        <Stack.Screen name="(tabs)/home" options={{ headerShown: true }} />
+        <Stack.Screen name="(tabs)/home" options={{ headerShown: false }} />
         
       )}
       <Stack.Screen name="(tabs)" options={{ headerShown: false}} />
