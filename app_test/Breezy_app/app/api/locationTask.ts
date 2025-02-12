@@ -34,14 +34,19 @@ export async function startLocationUpdates(email: string) {
   locationSubscription = await Location.watchPositionAsync(
     {
       accuracy: Location.Accuracy.BestForNavigation, // High accuracy for tracking
-      timeInterval: 5000,  // Update every 5 seconds
+      timeInterval: 60000,  // Update every 60 seconds
       distanceInterval: 0,  // Update regardless of movement
     },
     async (location) => {
       console.log("New foreground location:", location.coords.latitude, location.coords.longitude);
 
       const { latitude, longitude } = location.coords;
-      const timestamp = new Date().toISOString().split(".")[0] + "Z";
+
+      const now = new Date();
+      now.setSeconds(0, 0); 
+      now.setMinutes(now.getMinutes()-1);
+      const timestamp = now.toISOString().split(".")[0] + "Z"; // ISO format without milliseconds
+
       const locationData = { latitude, longitude, timestamp };
 
       // Save to AsyncStorage
