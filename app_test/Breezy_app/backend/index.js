@@ -33,14 +33,14 @@ db.connect(err => {
 
 // Login 
 app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email } = req.body;
 
-  if (!email || !password) {
+  if (!email) {
     return res.status(400).json({ error: 'Missing email or password' });
   }
 
   try {
-    const query = 'SELECT ID, NAME, EMAIL, PASSWORD_HASH FROM USER WHERE EMAIL = ?';
+    const query = 'SELECT ID, NAME, EMAIL FROM USER WHERE EMAIL = ?';
     
     db.query(query, [email], (err, rows) => {
       if (err) {
@@ -53,12 +53,7 @@ app.post('/login', async (req, res) => {
       }
 
       const user = rows[0];
-
-      // we need to actually hash passwords at some point lol
-      if (password !== user.PASSWORD_HASH) {
-        return res.status(401).json({ error: 'Invalid password' });
-      }
-
+      console.log('User logged in:', user.EMAIL);
       res.status(200).json({
         id: user.ID,
         name: user.NAME,
