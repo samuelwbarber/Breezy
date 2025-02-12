@@ -33,7 +33,7 @@ function RootContent() {
 
   useEffect(() => {
     if (currentUser) {
-      console.log("User logged in:", currentUser);
+      console.log("User logged in:", currentUser.name);
     } else {
       console.log("User logged out");
     }

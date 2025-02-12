@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text as RNText, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { 
+  View, 
+  Text as RNText, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity, 
+  Modal, 
+  RefreshControl,
+  ActivityIndicator
+} from 'react-native';
 import Svg, { Circle, G, Text as SvgText } from 'react-native-svg';
 import { useUser } from '../context/userContext';
 import { useRouter } from 'expo-router';
@@ -17,7 +26,6 @@ const AQICircle = ({ percentage, value, size = 100, strokeWidth = 10 }) => {
   return (
     <Svg width={size} height={size}>
       <G rotation="-90" origin={`${size / 2}, ${size / 2}`}>
-        {/* Background Circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -26,7 +34,6 @@ const AQICircle = ({ percentage, value, size = 100, strokeWidth = 10 }) => {
           strokeWidth={strokeWidth}
           fill="none"
         />
-        {/* Progress Circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -39,10 +46,9 @@ const AQICircle = ({ percentage, value, size = 100, strokeWidth = 10 }) => {
           strokeLinecap="round"
         />
       </G>
-      {/* AQI Number in the Center */}
       <SvgText
         x={size / 2}
-        y={size / 2 + 8} // Adjust vertical centering as needed
+        y={size / 2 + 8}
         textAnchor="middle"
         fontSize="24"
         fontWeight="bold"
@@ -57,74 +63,89 @@ export default function HomeScreen() {
   const { currentUser, setCurrentUser } = useUser();
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Dummy data for the Pollution Intake Graph (Window 2) remains unchanged.
-  const recordings = [
-    ["10:00 AM", "50"],
-    ["10:05 AM", "55"],
-    ["10:10 AM", "53"],
-    ["10:15 AM", "52"],
-    ["10:20 AM", "60"],
-    ["10:25 AM", "59"],
-  ];
-  const n = 5; // Number of recent recordings to display
-  const recentRecordings = recordings.slice(-n);
-  const lineLabels = recentRecordings.map(record => record[0]);
-  const lineDataPoints = recentRecordings.map(record => parseFloat(record[1]));
-
-  // -------------------------
-  // Prepare data for the Bar Chart (Window 3)
-  // -------------------------
-  // We use currentUser.messageLog as our measurement data.
-  // Each measurement should have at least: { date, eco2, tvoc, ... }
+  // Get measurements from the user data
   const measurements = currentUser?.messageLog || [];
-  // Filter valid measurements (must have a date, and eco2 and tvoc not null)
   const validMeasurements = measurements.filter(
     (m) => m.date && m.eco2 != null && m.tvoc != null
   );
 
-  // Determine the current week (assuming week starts on Monday and ends on Sunday)
+  // -------------------------
+  // Prepare data for the Pollution Intake Graph (Line Chart) for current day
+  // -------------------------
+  const today = new Date();
+  const todayMeasurements = validMeasurements.filter((m) => {
+    const d = new Date(m.date);
+    return (
+      d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate()
+    );
+  });
+
+  // Create data points for each hour from 0 up to the current hour.
+  // Instead of averaging, use only the first (earliest) measurement for that hour.
+  const currentHour = today.getHours();
+  const lineLabels = [];
+  const lineDataPoints = [];
+  for (let h = 0; h <= currentHour; h++) {
+    lineLabels.push(`${h}`);
+    const measurementsInHour = todayMeasurements.filter(
+      (m) => new Date(m.date).getHours() === h
+    );
+    if (measurementsInHour.length > 0) {
+      // Sort by time and take the earliest measurement
+      measurementsInHour.sort((a, b) => new Date(a.date) - new Date(b.date));
+      const firstMeasurement = measurementsInHour[0];
+      lineDataPoints.push(firstMeasurement.eco2);
+    } else {
+      lineDataPoints.push(0);
+    }
+  }
+
+  // -------------------------
+  // Prepare data for the Bar Chart (Total Pollution for the Week)
+  // -------------------------
   const now = new Date();
-  // Calculate Monday: if getDay() returns 0 for Sunday, adjust accordingly.
   const monday = new Date(now);
   monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   monday.setHours(0, 0, 0, 0);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   sunday.setHours(23, 59, 59, 999);
+  console.log("Current week - Monday:", monday, "Sunday:", sunday);
 
-  // Filter measurements that are within the current week.
   const currentWeekMeasurements = validMeasurements.filter((m) => {
     const mDate = new Date(m.date);
     return mDate >= monday && mDate <= sunday;
   });
 
-  // Group measurements by day (using eco2 for pollution measurement)
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const pollutionByDay: { [day: string]: { sum: number; count: number } } = {
-    "Mon": { sum: 0, count: 0 },
-    "Tue": { sum: 0, count: 0 },
-    "Wed": { sum: 0, count: 0 },
-    "Thu": { sum: 0, count: 0 },
-    "Fri": { sum: 0, count: 0 },
-    "Sat": { sum: 0, count: 0 },
-    "Sun": { sum: 0, count: 0 },
+    Mon: { sum: 0, count: 0 },
+    Tue: { sum: 0, count: 0 },
+    Wed: { sum: 0, count: 0 },
+    Thu: { sum: 0, count: 0 },
+    Fri: { sum: 0, count: 0 },
+    Sat: { sum: 0, count: 0 },
+    Sun: { sum: 0, count: 0 },
   };
 
   currentWeekMeasurements.forEach((m) => {
     const d = new Date(m.date);
-    // Adjust getDay() so that Monday is index 0, Tuesday is 1, ..., Sunday is 6.
     const dayIndex = (d.getDay() + 6) % 7;
     const dayName = weekDays[dayIndex];
     pollutionByDay[dayName].sum += m.eco2;
     pollutionByDay[dayName].count += 1;
   });
+  console.log("Pollution by day:", pollutionByDay);
 
-  // Calculate average eco2 for each day (or 0 if no measurements)
   const weeklyPollutionData = weekDays.map((day) => {
     const { sum, count } = pollutionByDay[day];
     return count > 0 ? sum / count : 0;
   });
+  console.log("Weekly pollution data:", weeklyPollutionData);
 
   const updatedBarData = {
     labels: weekDays,
@@ -134,39 +155,88 @@ export default function HomeScreen() {
       },
     ],
   };
+  console.log("Updated bar chart data:", updatedBarData);
 
   // -------------------------
-  // Prepare data for the Measurements Table (Window 4)
+  // Prepare data for the Measurements Table (most recent at top)
   // -------------------------
-  // Take at most the last 100 valid entries.
-  const recentValidMeasurements = validMeasurements.slice(-100);
+  const recentValidMeasurements = validMeasurements.slice(-100).reverse();
 
-  // Dummy AQI value for real-time air quality summary (Window 1)
-  const [aqiValue] = useState(72);
-  const aqiPercentage = aqiValue;
-  const aqiStatus =
-    aqiValue <= 33 ? "Good" :
-    aqiValue <= 66 ? "Moderate" : "Poor";
+  // -------------------------
+  // Compute Current Air Quality Indicator from Last 10 Measurements
+  // -------------------------
+  const last10Measurements = validMeasurements.slice(-10);
+  let averageEco2 = 400; // default baseline if no measurements
+  if (last10Measurements.length > 0) {
+    averageEco2 = last10Measurements.reduce((sum, m) => sum + m.eco2, 0) / last10Measurements.length;
+  }
+  console.log("Last 10 average eco2:", averageEco2);
 
-  // Function to compute background color based on AQI value.
-  const getAQIColor = (rating) => {
-    const hue = Math.round(120 - ((rating - 1) / 99) * 120);
+  const baseline = 400;
+  const factor = 5;
+  let computedScore = 100;
+  if (last10Measurements.length > 0) {
+    computedScore = 100 - ((averageEco2 - baseline) / factor);
+    if (computedScore > 100) computedScore = 100;
+    if (computedScore < 0) computedScore = 0;
+  }
+  console.log("Computed air quality score:", computedScore);
+
+  let airQualityState = "";
+  if (computedScore >= 90) {
+    airQualityState = "Excellent";
+  } else if (computedScore >= 75) {
+    airQualityState = "Good";
+  } else if (computedScore >= 50) {
+    airQualityState = "Fair";
+  } else {
+    airQualityState = "Poor";
+  }
+  console.log("Air quality state:", airQualityState);
+
+  const getAQIColor = (score: number) => {
+    const hue = Math.round((score / 100) * 120);
     return `hsl(${hue}, 70%, 50%)`;
   };
 
+  // -------------------------
+  // Periodically refetch user data every 10 seconds.
+  // -------------------------
   useEffect(() => {
+    let interval: number | undefined;
     if (currentUser) {
-      // Fetch updated user data asynchronously and update state.
+      // Immediately fetch once.
       fetchUserDataForUser(currentUser).then((updatedUser) => {
         if (updatedUser) {
           setCurrentUser(updatedUser);
         }
       });
-      startLocationUpdates(currentUser.email);
-    } else {
-      console.log("User logged out");
+      interval = setInterval(() => {
+        fetchUserDataForUser(currentUser).then((updatedUser) => {
+          if (updatedUser) {
+            setCurrentUser(updatedUser);
+          }
+        });
+      }, 10000);
     }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [currentUser]);
+
+  // -------------------------
+  // Implement pull-to-refresh (Instagram-like behavior)
+  // -------------------------
+  const onRefresh = async () => {
+    if (currentUser) {
+      setRefreshing(true);
+      const updatedUser = await fetchUserDataForUser(currentUser);
+      if (updatedUser) {
+        setCurrentUser(updatedUser);
+      }
+      setRefreshing(false);
+    }
+  };
 
   if (!currentUser) {
     return (
@@ -188,6 +258,7 @@ export default function HomeScreen() {
   };
 
   const handleLogOut = () => {
+    stopLocationUpdates();
     setCurrentUser(null);
     setMenuVisible(false);
     router.replace("/signInScreen");
@@ -203,21 +274,28 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Scrollable Content */}
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Window 1: Real-Time AQI Summary with Circular Progress */}
-        <View style={[styles.window, { backgroundColor: getAQIColor(aqiValue) }]}>
+      {/* Scrollable Content with Pull-to-Refresh */}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Window 1: Real-Time Air Quality Summary (Updated) */}
+        <View style={[styles.window, { backgroundColor: getAQIColor(computedScore) }]}>
           <RNText style={[styles.windowHeader, { color: "#fff" }]}>Current Air Quality</RNText>
           <View style={styles.aqiContainer}>
-            <AQICircle percentage={aqiPercentage} value={aqiValue} size={100} strokeWidth={10} />
+            <AQICircle percentage={computedScore} value={Math.round(computedScore)} size={100} strokeWidth={10} />
             <View style={styles.aqiTextContainer}>
-              <RNText style={[styles.aqiStatusText, { color: "#fff" }]}>{aqiStatus}</RNText>
+              <RNText style={[styles.aqiStatusText, { color: "#fff" }]}>{airQualityState}</RNText>
               <RNText style={[styles.aqiRecommendation, { color: "#fff" }]}>
-                {aqiValue <= 33
-                  ? "Great air quality! Enjoy your day outdoors."
-                  : aqiValue <= 66
-                  ? "Moderate air quality. Consider taking breaks if needed."
-                  : "Poor air quality. Limit outdoor activities if possible."}
+                {airQualityState === "Excellent"
+                  ? "Air quality is optimal."
+                  : airQualityState === "Good"
+                  ? "Air quality is good."
+                  : airQualityState === "Fair"
+                  ? "Air quality is moderate."
+                  : "Air quality is poor. Take precautions."}
               </RNText>
             </View>
           </View>

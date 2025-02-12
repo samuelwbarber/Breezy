@@ -61,7 +61,7 @@ export async function startLocationUpdates(email: string) {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("❌ Server error:", response.status, errorText);
+          // console.log("❌ Server error:", response.status, errorText);
           return;
         }
 

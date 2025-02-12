@@ -81,7 +81,7 @@ export async function fetchUserDataForUser(user: User): Promise<User | null> {
       entry.coordinate.longitude,
       entry.eco2,
       entry.tvoc,
-      new Date(entry.time) // or entry.date if that's the property name
+      new Date(entry.date) // or entry.date if that's the property name
     ));
 
     // console.log("Fetched user data:", messages);
