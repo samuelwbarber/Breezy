@@ -37,3 +37,22 @@ export async function pairDevice(deviceId: string, email: string){
     return null;
   }
 }
+
+export async function fetchUserData(email: string) {
+  try {
+    const response = await fetch(`${SERVER_URL}/user-data/${email}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch user data");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Fetching user data failed:", error);
+    return null;
+  }
+}
+

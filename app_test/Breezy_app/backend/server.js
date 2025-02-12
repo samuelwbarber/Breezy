@@ -173,6 +173,58 @@ app.post('/pair-device', async (req, res) => {
   }
 });
 
+//retreive all user's datapoints including eco2 and tvoc values
+app.get('/user-data/:email', async (req, res) => {
+  const email = req.params.email;
+
+  try {
+    
+    const getUserQuery = 'SELECT ID FROM USER WHERE EMAIL = ?';
+
+    db.query(getUserQuery, [email], (err, results) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return res.status(500).json({ error: 'Database query failed' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const userId = results[0].ID;
+
+      // Step 2: Retrieve all data points for the user from ENTRY table
+      const getDataQuery = `
+        SELECT LATITUDE, LONGITUDE, ECO2, TVOC, ENTRY_TIME 
+        FROM ENTRY 
+        WHERE ID = ?
+      `;
+
+      db.query(getDataQuery, [userId], (err, dataResults) => {
+        if (err) {
+          console.error('Database query error:', err);
+          return res.status(500).json({ error: 'Database query failed' });
+        }
+
+        // Transform data into required format
+        const formattedData = dataResults.map(row => ({
+          coordinate: { latitude: row.LATITUDE, longitude: row.LONGITUDE },
+          eco2: row.ECO2,
+          tvoc: row.TVOC,
+          date: row.ENTRY_TIME
+        }));
+
+        console.log(`Retrieved ${formattedData.length} data points for user ${email}`);
+        res.status(200).json(formattedData);
+      });
+    });
+
+  } catch (error) {
+    console.error("Unexpected server error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 
 // Retreive Heatmap Data
