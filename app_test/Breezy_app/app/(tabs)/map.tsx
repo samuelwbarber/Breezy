@@ -67,7 +67,7 @@ export default function MapScreen() {
     };
 
     fetchHeatmapData();
-  }, [currentUser, currentUser?.id]);
+  }, [currentUser]);
 
   // Filter data based on selected date and time range
   useEffect(() => {

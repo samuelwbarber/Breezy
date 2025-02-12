@@ -3,7 +3,6 @@ import { Text, View, TextInput, Button, StyleSheet, TouchableOpacity } from "rea
 import { useUser } from "./context/userContext";
 import { User } from "./context/user";
 import { useRouter } from "expo-router";
-import { startLocationUpdates } from "./api/locationTask";
 import { loginUser } from "./api/auth";
 
 

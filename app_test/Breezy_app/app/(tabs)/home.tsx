@@ -5,7 +5,6 @@ import { useUser } from '../context/userContext';
 import { useRouter } from 'expo-router';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
-import { startLocationUpdates, stopLocationUpdates } from '../api/locationTask';
 
 // A custom component for the AQI circular progress indicator with the AQI number inside
 const AQICircle = ({ percentage, value, size = 100, strokeWidth = 10 }) => {
@@ -100,7 +99,6 @@ export default function HomeScreen() {
   useEffect(() => {
     if (currentUser) {
       console.log("User logged in:", currentUser);
-      startLocationUpdates(currentUser.email);
     } else {
       console.log("User logged out");
     }
@@ -126,7 +124,6 @@ export default function HomeScreen() {
   };
 
   const handleLogOut = () => {
-    stopLocationUpdates();
     setCurrentUser(null);
     setMenuVisible(false);
     router.replace("/signInScreen")
