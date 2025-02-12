@@ -3,8 +3,9 @@ import { Text, View, TextInput, Button, StyleSheet, TouchableOpacity } from "rea
 import { useUser } from "./context/userContext";
 import { User } from "./context/user";
 import { useRouter } from "expo-router";
-import { startLocationUpdates } from "./locationTask";
+import { startLocationUpdates } from "./api/locationTask";
 import { loginUser } from "./api/auth";
+
 
 export default function SignInScreen2() {
   const [email, setEmail] = useState("");
@@ -19,7 +20,7 @@ export default function SignInScreen2() {
   useEffect(() => {
     console.log("Current user updated:", currentUser);
     if (currentUser) {
-      router.replace("/(tabs)/home");
+      router.replace('/pair_device');
     }
   }, [currentUser, router]);
 

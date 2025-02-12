@@ -11,7 +11,8 @@ export default function Index() {
     // Defer the navigation until after the root layout is mounted.
     const timer = setTimeout(() => {
       if (currentUser) {
-        router.replace("/(tabs)/home");
+        //router.replace("/(tabs)/home");
+        router.replace("/signInScreen");
       } else {
         router.replace("/signInScreen");
       }
