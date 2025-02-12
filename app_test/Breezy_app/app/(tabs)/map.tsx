@@ -36,7 +36,7 @@ export default function MapScreen() {
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`${SERVER_URL}/user-data/${currentUser.id}`);
+        const response = await fetch(`${SERVER_URL}/map-data/${currentUser.email}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -67,7 +67,7 @@ export default function MapScreen() {
     };
 
     fetchHeatmapData();
-  }, [currentUser]);
+  }, [currentUser, currentUser?.id]);
 
   // Filter data based on selected date and time range
   useEffect(() => {

@@ -4,11 +4,11 @@ import { SERVER_URL } from "../config";
 
 let locationSubscription: Location.LocationSubscription | null = null;
 
-export async function startLocationUpdates(userId: string) {
+export async function startLocationUpdates(email: string) {
   console.log("Requesting foreground location updates...");
 
-  if (!userId) {
-    console.error("User ID is required for location updates.");
+  if (!email) {
+    console.error("Email is required for location updates.");
     return;
   }
 
@@ -19,14 +19,14 @@ export async function startLocationUpdates(userId: string) {
     return;
   }
 
-  const LOCATION_URL = `${SERVER_URL}/location-data/${userId}`;
+  const LOCATION_URL = `${SERVER_URL}/location-data/${email}`;
 
   // Start watching the user's location in the foreground
   locationSubscription = await Location.watchPositionAsync(
     {
       accuracy: Location.Accuracy.High,
-      timeInterval: 60000, // Update every 5 seconds
-      distanceInterval: 5, // Update every 1 meter
+      //distanceInterval: 5, // Update every 1 meter
+      timeInterval: 5000, // Update every 5 seconds
     },
     async (location) => {
       const { latitude, longitude } = location.coords;

@@ -41,6 +41,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="pair_device"
         options={{
+          headerShown: false,
           href:null
         }}
       />

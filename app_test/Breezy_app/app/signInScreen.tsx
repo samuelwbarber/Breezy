@@ -4,7 +4,7 @@ import { useUser } from "./context/userContext";
 import { loginUser } from "./api/auth";
 import { User } from "./context/user";
 import { useRouter } from "expo-router";
-import { startLocationUpdates } from "./locationTask";
+import { startLocationUpdates } from "./api/locationTask";
 
 export default function SignInScreen2() {
   const [email, setEmail] = useState("");
@@ -21,7 +21,7 @@ export default function SignInScreen2() {
   useEffect(() => {
     console.log("Current user updated:", currentUser);
     if (currentUser) {
-      router.replace("/(tabs)/home");
+      router.replace('/pair_device');
     }
   }, [currentUser, router]);
 
@@ -43,8 +43,8 @@ export default function SignInScreen2() {
         const testUser = new User("cyclist_001", "John Doe", "john.cyclist@example.com");
         setCurrentUser(testUser);
         setMessage("Logged in as Bob!");
-        startLocationUpdates(testUser.id);
-        router.replace("/(tabs)/home");
+        startLocationUpdates(testUser.email);
+        router.replace("/pair_device");
         return;
       }
 
@@ -56,8 +56,8 @@ export default function SignInScreen2() {
         }
         setCurrentUser(loggedUser);
         console.log("Login successful!");
-        startLocationUpdates(loggedUser.id);
-        router.replace("/(tabs)/home");
+        startLocationUpdates(loggedUser.email);
+        router.replace("/pair_device");
       } catch (error) {
         console.error("Login failed:", error);
         setMessage("Error logging in.");
@@ -94,7 +94,7 @@ export default function SignInScreen2() {
         const newUser = new User("new_user_001", username, email);
         setCurrentUser(newUser);
         setMessage("Account created and logged in!");
-        router.replace("/(tabs)/home");
+        router.replace("/pair_device");
       } catch (error) {
         console.error("Account creation failed:", error);
         setMessage("Error creating account.");

@@ -1,13 +1,15 @@
 import React, { useRef, useState } from "react";
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native";
-import { pairDevice } from "../api/auth";
-import { useUser} from "../context/userContext";
-import { User } from "../context/user";
+import { pairDevice} from "./api/auth";
+import { User } from "./context/user";
+import { useUser } from "./context/userContext";
+import { useRouter } from "expo-router";
 
 export default function PairDeviceScreen() {
   const [deviceId, setDeviceId] = useState(["", "", "", "", "", ""]);
   const inputs = useRef<TextInput[]>([]);
   const { currentUser } = useUser();
+  const router = useRouter();
 
   const handleChangeText = (text: string, index: number) => {
     if (text.length > 1) {
@@ -47,7 +49,7 @@ export default function PairDeviceScreen() {
             maxLength={1}
             ref={(ref) => (inputs.current[index] = ref!)}
             keyboardType="default"
-            autoCapitalize="characters"
+            autoCapitalize="none"
             returnKeyType="next"
           />
         ))}
@@ -59,7 +61,8 @@ export default function PairDeviceScreen() {
           if(currentUser){
           pairDevice(deviceId.join(""), currentUser?.email);
           currentUser.id = deviceId.join("");
-          console.log("Connect pressed with Device ID:", deviceId.join(""));}
+          console.log("Connect pressed with Device ID:", deviceId.join(""));
+          router.replace('/(tabs)/home');}
           else{
             console.log("No User Found");
           }
