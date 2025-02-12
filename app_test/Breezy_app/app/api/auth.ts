@@ -18,3 +18,22 @@ export async function loginUser(email: string, password: string) {
     return null;
   }
 }
+
+export async function pairDevice(deviceId: string, email: string){
+  try {
+    const response = await fetch(`${SERVER_URL}/pair-device`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({deviceId, email}),
+    });
+
+    if (!response.ok) {
+      throw new Error("Invalid credentials");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Pairing request failed:", error);
+    return null;
+  }
+}

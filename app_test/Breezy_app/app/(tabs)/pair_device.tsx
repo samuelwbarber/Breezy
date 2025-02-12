@@ -1,9 +1,13 @@
 import React, { useRef, useState } from "react";
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { pairDevice } from "../api/auth";
+import { useUser} from "../context/userContext";
+import { User } from "../context/user";
 
 export default function PairDeviceScreen() {
   const [deviceId, setDeviceId] = useState(["", "", "", "", "", ""]);
   const inputs = useRef<TextInput[]>([]);
+  const { currentUser } = useUser();
 
   const handleChangeText = (text: string, index: number) => {
     if (text.length > 1) {
@@ -53,7 +57,12 @@ export default function PairDeviceScreen() {
         disabled={!isDeviceIdComplete}
         onPress={() => {
           // For now, no functionality.
-          console.log("Connect pressed with Device ID:", deviceId.join(""));
+          if(currentUser){
+          pairDevice(deviceId.join(""), currentUser?.email);
+          console.log("Connect pressed with Device ID:", deviceId.join(""));}
+          else{
+            console.log("No User Found");
+          }
         }}
       >
         <Text style={styles.connectButtonText}>Connect</Text>
