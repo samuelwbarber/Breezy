@@ -188,7 +188,6 @@ export default function HomeScreen() {
   };
 
   const handleLogOut = () => {
-    stopLocationUpdates();
     setCurrentUser(null);
     setMenuVisible(false);
     router.replace("/signInScreen");

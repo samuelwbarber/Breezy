@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from './user';
+import { startLocationUpdates, stopLocationUpdates } from '../api/locationTask';
 
 interface UserContextType {
   currentUser: User | null;
@@ -21,20 +22,31 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const loadUser = async () => {
       const storedUser = await AsyncStorage.getItem('currentUser');
       if (storedUser) {
-        setCurrentUser(JSON.parse(storedUser)); // Set the current user if found in AsyncStorage
+        const user = JSON.parse(storedUser);
+        setCurrentUser(user);
       }
     };
-
     loadUser();
   }, []);
+
+  // Automatically start/stop location updates when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      console.log("User logged in, starting location updates...");
+      startLocationUpdates(currentUser.email);
+    } else {
+      console.log("User logged out, stopping location updates...");
+      stopLocationUpdates();
+    }
+  }, [currentUser]);
 
   // Save user to AsyncStorage when they log in
   const handleSetCurrentUser = (user: User | null) => {
     setCurrentUser(user);
     if (user) {
-      AsyncStorage.setItem('currentUser', JSON.stringify(user)); // Save user in AsyncStorage
+      AsyncStorage.setItem('currentUser', JSON.stringify(user));
     } else {
-      AsyncStorage.removeItem('currentUser'); // Remove user data when logged out
+      AsyncStorage.removeItem('currentUser');
     }
   };
 
