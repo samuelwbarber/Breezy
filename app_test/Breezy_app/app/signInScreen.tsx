@@ -12,14 +12,15 @@ export default function SignInScreen2() {
   const [message, setMessage] = useState("");
   const [isSignUp, setIsSignUp] = useState(false); // Toggle between Sign In and Sign Up
 
-  const { currentUser, setCurrentUser } = useUser();
+  let { currentUser, setCurrentUser } = useUser();
   const router = useRouter();
 
   // Whenever currentUser updates, redirect automatically if a user is logged in.
   useEffect(() => {
     console.log("Current user updated:", currentUser);
     if (currentUser) {
-      router.replace('/pair_device');
+      console.log("Moving to HOME from SignInScreen");
+      router.replace("/(tabs)/home");
     }
   }, [currentUser, router]);
 

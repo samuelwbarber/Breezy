@@ -5,6 +5,8 @@ import { useUser } from '../context/userContext';
 import { useRouter } from 'expo-router';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
+import { startLocationUpdates, stopLocationUpdates } from '../api/locationTask';
+import { fetchUserDataForUser } from '../api/auth';
 
 // A custom component for the AQI circular progress indicator with the AQI number inside
 const AQICircle = ({ percentage, value, size = 100, strokeWidth = 10 }) => {
@@ -56,7 +58,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const [menuVisible, setMenuVisible] = useState(false);
 
-  // Dummy data for the Measurements Table and charts
+  // Dummy data for the Pollution Intake Graph (Window 2) remains unchanged.
   const recordings = [
     ["10:00 AM", "50"],
     ["10:05 AM", "55"],
@@ -70,27 +72,83 @@ export default function HomeScreen() {
   const lineLabels = recentRecordings.map(record => record[0]);
   const lineDataPoints = recentRecordings.map(record => parseFloat(record[1]));
 
-  // Sample data for the Bar Chart (Total Pollution for the Week)
-  const barData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  // -------------------------
+  // Prepare data for the Bar Chart (Window 3)
+  // -------------------------
+  // We use currentUser.messageLog as our measurement data.
+  // Each measurement should have at least: { date, eco2, tvoc, ... }
+  const measurements = currentUser?.messageLog || [];
+  // Filter valid measurements (must have a date, and eco2 and tvoc not null)
+  const validMeasurements = measurements.filter(
+    (m) => m.date && m.eco2 != null && m.tvoc != null
+  );
+
+  // Determine the current week (assuming week starts on Monday and ends on Sunday)
+  const now = new Date();
+  // Calculate Monday: if getDay() returns 0 for Sunday, adjust accordingly.
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+
+  // Filter measurements that are within the current week.
+  const currentWeekMeasurements = validMeasurements.filter((m) => {
+    const mDate = new Date(m.date);
+    return mDate >= monday && mDate <= sunday;
+  });
+
+  // Group measurements by day (using eco2 for pollution measurement)
+  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const pollutionByDay: { [day: string]: { sum: number; count: number } } = {
+    "Mon": { sum: 0, count: 0 },
+    "Tue": { sum: 0, count: 0 },
+    "Wed": { sum: 0, count: 0 },
+    "Thu": { sum: 0, count: 0 },
+    "Fri": { sum: 0, count: 0 },
+    "Sat": { sum: 0, count: 0 },
+    "Sun": { sum: 0, count: 0 },
+  };
+
+  currentWeekMeasurements.forEach((m) => {
+    const d = new Date(m.date);
+    // Adjust getDay() so that Monday is index 0, Tuesday is 1, ..., Sunday is 6.
+    const dayIndex = (d.getDay() + 6) % 7;
+    const dayName = weekDays[dayIndex];
+    pollutionByDay[dayName].sum += m.eco2;
+    pollutionByDay[dayName].count += 1;
+  });
+
+  // Calculate average eco2 for each day (or 0 if no measurements)
+  const weeklyPollutionData = weekDays.map((day) => {
+    const { sum, count } = pollutionByDay[day];
+    return count > 0 ? sum / count : 0;
+  });
+
+  const updatedBarData = {
+    labels: weekDays,
     datasets: [
       {
-        data: [120, 140, 110, 160, 150, 130, 170],
+        data: weeklyPollutionData,
       },
     ],
   };
 
-  // Dummy AQI value for real-time air quality summary (1 = best, 100 = worst)
-  const [aqiValue] = useState(72);
-  const aqiPercentage = aqiValue; // Using the AQI value directly as the percentage
+  // -------------------------
+  // Prepare data for the Measurements Table (Window 4)
+  // -------------------------
+  // Take at most the last 100 valid entries.
+  const recentValidMeasurements = validMeasurements.slice(-100);
 
-  // Compute a status string based on the AQI value
+  // Dummy AQI value for real-time air quality summary (Window 1)
+  const [aqiValue] = useState(72);
+  const aqiPercentage = aqiValue;
   const aqiStatus =
     aqiValue <= 33 ? "Good" :
     aqiValue <= 66 ? "Moderate" : "Poor";
 
-  // Function to compute a background color based on the AQI value.
-  // It maps 1 (green) to 100 (red) using a hue from 120 (green) to 0 (red).
+  // Function to compute background color based on AQI value.
   const getAQIColor = (rating) => {
     const hue = Math.round(120 - ((rating - 1) / 99) * 120);
     return `hsl(${hue}, 70%, 50%)`;
@@ -98,7 +156,13 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (currentUser) {
-      console.log("User logged in:", currentUser);
+      // Fetch updated user data asynchronously and update state.
+      fetchUserDataForUser(currentUser).then((updatedUser) => {
+        if (updatedUser) {
+          setCurrentUser(updatedUser);
+        }
+      });
+      startLocationUpdates(currentUser.email);
     } else {
       console.log("User logged out");
     }
@@ -126,7 +190,7 @@ export default function HomeScreen() {
   const handleLogOut = () => {
     setCurrentUser(null);
     setMenuVisible(false);
-    router.replace("/signInScreen")
+    router.replace("/signInScreen");
   };
 
   return (
@@ -145,9 +209,7 @@ export default function HomeScreen() {
         <View style={[styles.window, { backgroundColor: getAQIColor(aqiValue) }]}>
           <RNText style={[styles.windowHeader, { color: "#fff" }]}>Current Air Quality</RNText>
           <View style={styles.aqiContainer}>
-            {/* Left: AQI Circle */}
             <AQICircle percentage={aqiPercentage} value={aqiValue} size={100} strokeWidth={10} />
-            {/* Right: Recommendation */}
             <View style={styles.aqiTextContainer}>
               <RNText style={[styles.aqiStatusText, { color: "#fff" }]}>{aqiStatus}</RNText>
               <RNText style={[styles.aqiRecommendation, { color: "#fff" }]}>
@@ -161,7 +223,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Window 2: Pollution Intake Graph */}
+        {/* Window 2: Pollution Intake Graph (Line Chart) */}
         <View style={styles.window}>
           <RNText style={styles.windowHeader}>Pollution Intake Graph</RNText>
           <ScrollView horizontal>
@@ -198,7 +260,7 @@ export default function HomeScreen() {
         <View style={styles.window}>
           <RNText style={styles.windowHeader}>Total Pollution for the Week</RNText>
           <BarChart
-            data={barData}
+            data={updatedBarData}
             width={300}
             height={220}
             yAxisSuffix=""
@@ -220,14 +282,22 @@ export default function HomeScreen() {
           <RNText style={styles.windowHeader}>Measurements</RNText>
           <View style={styles.table}>
             <View style={[styles.tableRow, styles.tableHeader]}>
-              <RNText style={[styles.tableCell, styles.tableHeaderCell]}>Time</RNText>
-              <RNText style={[styles.tableCell, styles.tableHeaderCell]}>Pollution Intake</RNText>
+              <RNText style={[styles.tableCell, styles.tableHeaderCell]}>Date</RNText>
+              <RNText style={[styles.tableCell, styles.tableHeaderCell]}>eCO2</RNText>
+              <RNText style={[styles.tableCell, styles.tableHeaderCell]}>TVOC</RNText>
             </View>
             <ScrollView style={{ maxHeight: 150 }} nestedScrollEnabled={true}>
-              {recentRecordings.map((record, index) => (
+              {recentValidMeasurements.map((measurement, index) => (
                 <View key={index} style={styles.tableRow}>
-                  <RNText style={styles.tableCell}>{record[0]}</RNText>
-                  <RNText style={styles.tableCell}>{record[1]}</RNText>
+                  <RNText style={styles.tableCell}>
+                    {new Date(measurement.date).toLocaleString()}
+                  </RNText>
+                  <RNText style={styles.tableCell}>
+                    {measurement.eco2}
+                  </RNText>
+                  <RNText style={styles.tableCell}>
+                    {measurement.tvoc}
+                  </RNText>
                 </View>
               ))}
             </ScrollView>
@@ -365,4 +435,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-
