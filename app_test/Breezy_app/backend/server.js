@@ -17,7 +17,7 @@ app.listen(port, '0.0.0.0', () => {
 // MySQL Connection (Single Connection)
 const db = mysql.createConnection({
   host: '18.134.180.224',
-  user: 'remote_user',
+  user: 'remote_user2',
   password: 'Embedded2025!',
   database: 'DB2',
 });
