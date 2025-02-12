@@ -4,10 +4,10 @@ import { SERVER_URL } from "./config";
 
 let locationSubscription: Location.LocationSubscription | null = null;
 
-export async function startLocationUpdates(userId: string) {
+export async function startLocationUpdates(userEmail: string) {
   console.log("Requesting foreground location updates...");
 
-  if (!userId) {
+  if (!userEmail) {
     console.error("User ID is required for location updates.");
     return;
   }
@@ -19,7 +19,7 @@ export async function startLocationUpdates(userId: string) {
     return;
   }
 
-  const LOCATION_URL = `${SERVER_URL}/location-data/${userId}`;
+  const LOCATION_URL = `${SERVER_URL}/location-data/${userEmail}`;
 
   // Start watching the user's location in the foreground
   locationSubscription = await Location.watchPositionAsync(

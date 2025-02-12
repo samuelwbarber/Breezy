@@ -16,7 +16,7 @@ app.listen(port, '0.0.0.0', () => {
 // MySQL Connection (Single Connection)
 const db = mysql.createConnection({
   host: '18.134.180.224',
-  user: 'remote_user',
+  user: 'remote_user2',
   password: 'Embedded2025!',
   database: 'DB2',
 });
@@ -32,14 +32,14 @@ db.connect(err => {
 
 // Login 
 app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Missing email or password' });
+  const { email } = req.body;
+  console.log("Email:", email);
+  if (!email) {
+    return res.status(400).json({ error: 'Missing email' });
   }
 
   try {
-    const query = 'SELECT ID, NAME, EMAIL, PASSWORD_HASH FROM USER WHERE EMAIL = ?';
+    const query = 'SELECT ID, NAME, EMAIL FROM USER WHERE EMAIL = ?';
     
     db.query(query, [email], (err, rows) => {
       if (err) {
@@ -48,16 +48,12 @@ app.post('/login', async (req, res) => {
       }
 
       if (rows.length === 0) {
+        console.log('User not found');
         return res.status(401).json({ error: 'User not found' });
       }
 
       const user = rows[0];
-
-      // we need to actually hash passwords at some point lol
-      if (password !== user.PASSWORD_HASH) {
-        return res.status(401).json({ error: 'Invalid password' });
-      }
-
+      console.log('User found:', user);
       res.status(200).json({
         id: user.ID,
         name: user.NAME,
@@ -70,6 +66,41 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+app.post('/signUp', async (req, res) => {
+  const { email, username, id } = req.body;
+  console.log("Email:", email);
+  console.log("Username:", username);
+  console.log("ID:", id);
+  
+  if (!email) {
+    return res.status(400).json({ error: 'Missing email' });
+  }
+
+  try {
+    // Use a parameterized query to avoid SQL injection.
+    const query = "INSERT INTO USER (ID, NAME, EMAIL) VALUES (?, ?, ?);";
+    
+    db.query(query, [id, username, email], (err, results) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return res.status(500).json({ error: 'Database query failed' });
+      }
+      
+      // Check if a row was inserted.
+      if (results.affectedRows > 0) {
+        return res.status(200).json({ message: 'User created successfully' });
+      } else {
+        return res.status(500).json({ error: 'User not created' });
+      }
+    });
+  } catch (err) {
+    console.error('Unexpected server error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 
 app.post('/location-data/:userId', async (req, res) => {
   

@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, TextInput, Button, StyleSheet, TouchableOpacity } from "react-native";
 import { useUser } from "./context/userContext";
-import { loginUser } from "./api/auth";
 import { User } from "./context/user";
 import { useRouter } from "expo-router";
 import { startLocationUpdates } from "./locationTask";
+import { loginUser } from "./api/auth";
 
 export default function SignInScreen2() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState(""); // Only used in Sign Up mode
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isSignUp, setIsSignUp] = useState(false); // Toggle between Sign In and Sign Up
 
@@ -25,79 +23,65 @@ export default function SignInScreen2() {
     }
   }, [currentUser, router]);
 
-  // A simple password validator: at least 8 characters, one number, one special character.
-  const isValidPassword = (pass: string) => {
-    const lengthRequirement = pass.length >= 8;
-    const numberRequirement = /[0-9]/.test(pass);
-    const specialCharRequirement = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
-    return lengthRequirement && numberRequirement && specialCharRequirement;
+  // Dummy function to simulate sending a verification email and verifying it.
+  const verifyEmail = async (email: string) => {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    console.log(`Verification code for ${email}: ${code}`);
+    return code;
+    // TODO complete
   };
 
   const handleSignIn = async () => {
     setMessage(""); // Reset message
 
     if (!isSignUp) {
-      // Sign In Logic
-      // "Cheat" login for testing
-      if (email === "bob@bob.com" && password === "password") {
-        const testUser = new User("cyclist_001", "John Doe", "john.cyclist@example.com");
-        setCurrentUser(testUser);
-        setMessage("Logged in as Bob!");
-        startLocationUpdates(testUser.id);
-        router.replace("/(tabs)/home");
-        return;
-      }
 
       try {
-        const loggedUser = await loginUser(email, password);
-        if (!loggedUser) {
-          setMessage("Invalid email or password.");
+        // Simulate email verification
+        // TODO: Verify this email exists in the database
+        // If it does, get the login. If not, show an error message.
+        
+        const userData = await loginUser(email);
+        console.log(userData); 
+        if (userData === null) {
+          setMessage("Account does not exist. Please sign up instead.");
           return;
+        } else {
+          const code = await verifyEmail(email);
+          const route: `/emailVerification?${string}` = `/emailVerification?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}&username=${encodeURIComponent(userData.name)}&signIn=${encodeURIComponent(true)}&id=${encodeURIComponent(userData.id)}`;
+          router.replace(route);
+
         }
-        setCurrentUser(loggedUser);
-        console.log("Login successful!");
-        startLocationUpdates(loggedUser.id);
-        router.replace("/(tabs)/home");
       } catch (error) {
-        console.error("Login failed:", error);
-        setMessage("Error logging in.");
+        console.error("Error during sign in:", error);
+        setMessage("Error during email verification.");
       }
     } else {
       // Sign Up Logic
-
-      // For this toy example, if the email is "bob@bob.com", we assume an account already exists.
-      if (email === "bob@bob.com") {
+      
+      // Check that user already exists
+      const userdata = await loginUser(email);
+      if (userdata !== null) {
         setMessage("Account already exists. Please log in instead.");
         return;
       }
 
-      // Check that the username is provided
       if (username.trim() === "") {
         setMessage("Please enter a username.");
         return;
       }
 
-      // Check that password and confirm password match
-      if (password !== confirmPassword) {
-        setMessage("Passwords do not match.");
-        return;
-      }
-
-      // Validate password meets requirements
-      if (!isValidPassword(password)) {
-        setMessage("Password must be at least 8 characters long and include at least one number and one special character.");
-        return;
-      }
-
       try {
-        // Simulate account creation by instantiating a new user with the provided username.
-        const newUser = new User("new_user_001", username, email);
-        setCurrentUser(newUser);
-        setMessage("Account created and logged in!");
-        router.replace("/(tabs)/home");
+        const code = await verifyEmail(email);
+        console.log("Username Set as", username)
+        const route: `/emailVerification?${string}` =
+        `/emailVerification?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}&username=${encodeURIComponent(username)}&signIn=${encodeURIComponent(false)}&id=${encodeURIComponent("test")}`;
+          router.replace(route); 
+        
+        
       } catch (error) {
-        console.error("Account creation failed:", error);
-        setMessage("Error creating account.");
+        console.error("Error during sign up:", error);
+        setMessage("Error during email verification.");
       }
     }
   };
@@ -118,7 +102,7 @@ export default function SignInScreen2() {
         keyboardType="email-address"
         autoCapitalize="none"
       />
-      {/* Conditionally render the Username field for Sign Up */}
+      {/* Render the Username field only in Sign Up mode */}
       {isSignUp && (
         <TextInput
           style={styles.input}
@@ -126,22 +110,6 @@ export default function SignInScreen2() {
           onChangeText={setUsername}
           value={username}
           autoCapitalize="none"
-        />
-      )}
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={setPassword}
-        value={password}
-      />
-      {isSignUp && (
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          secureTextEntry
-          onChangeText={setConfirmPassword}
-          value={confirmPassword}
         />
       )}
       <Button title={isSignUp ? "Sign Up" : "Sign In"} onPress={handleSignIn} />
