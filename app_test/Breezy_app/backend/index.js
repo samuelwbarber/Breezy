@@ -14,7 +14,6 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on http://localhost:${port}`);
 });
 
-// MySQL Connection (Single Connection)
 const db = mysql.createConnection({
   host: '18.134.180.224',
   user: 'remote_user2',
@@ -22,7 +21,6 @@ const db = mysql.createConnection({
   database: 'DB2',
 });
 
-// Connect to MySQL
 db.connect(err => {
   if (err) {
     console.error('Database connection failed:', err.stack);
@@ -67,46 +65,73 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.post('/location-data/:email', async (req, res) => {
-  const email = req.params.email;  // Get email from the URL parameter
-  const { latitude, longitude, timestamp } = req.body;
-
-  if (!latitude || !longitude || !timestamp) {
-    return res.status(400).json({ error: 'Missing required data' });
+app.post('/signUp', async (req, res) => {
+  const { email, username, id } = req.body;
+  console.log("Email:", email);
+  console.log("Username:", username);
+  console.log("ID:", id);
+  
+  if (!email) {
+    return res.status(400).json({ error: 'Missing email' });
   }
-
-  const formattedTimestamp = new Date(timestamp).toISOString().slice(0, 19).replace("T", " ");
-
   try {
-    // Step 1: Get user ID based on the email
-    const getUserIdQuery = 'SELECT ID FROM USER WHERE EMAIL = ?';
+    // Use a parameterized query to avoid SQL injection.
+    const query = "INSERT INTO USER (ID, NAME, EMAIL) VALUES (?, ?, ?);";
     
-    db.query(getUserIdQuery, [email], (err, results) => {
+    db.query(query, [id, username, email], (err, results) => {
       if (err) {
         console.error('Database query error:', err);
         return res.status(500).json({ error: 'Database query failed' });
       }
-
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      const userId = results[0].ID;
-
-      // Step 2: Insert location data into the ENTRY table
-      const insertLocationQuery = 'INSERT INTO ENTRY (ID, LONGITUDE, LATITUDE, ENTRY_TIME, ECO2, TVOC) VALUES (?, ?, ?, ?, NULL, NULL);';
       
-      db.query(insertLocationQuery, [userId, longitude, latitude, formattedTimestamp], (err, results) => {
-        if (err) {
-          console.error('Error inserting location data:', err);
-          return res.status(500).json({ error: 'Database error' });
-        }
-
-        console.log('Location data inserted successfully');
-        res.status(201).json({ message: 'Location data stored successfully' });
-      });
+      // Check if a row was inserted.
+      if (results.affectedRows > 0) {
+        return res.status(200).json({ message: 'User created successfully' });
+      } else {
+        return res.status(500).json({ error: 'User not created' });
+      }
     });
+  } catch (err) {
+    console.error('Unexpected server error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
+app.post('/signUp', async (req, res) => {
+  const { email, username, id } = req.body;
+  console.log("Email:", email);
+  console.log("Username:", username);
+  console.log("ID:", id);
+  
+  if (!email) {
+    return res.status(400).json({ error: 'Missing email' });
+  }
+  try {
+    // Use a parameterized query to avoid SQL injection.
+    const query = "INSERT INTO USER (ID, NAME, EMAIL) VALUES (?, ?, ?);";
+    
+    db.query(query, [id, username, email], (err, results) => {
+      if (err) {
+        console.error('Database query error:', err);
+        return res.status(500).json({ error: 'Database query failed' });
+      }
+      
+      // Check if a row was inserted.
+      if (results.affectedRows > 0) {
+        return res.status(200).json({ message: 'User created successfully' });
+      } else {
+        return res.status(500).json({ error: 'User not created' });
+      }
+    });
+  } catch (err) {
+    console.error('Unexpected server error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/appunpair', async (req, res) => {
+  try {
+    
   } catch (err) {
     console.error("Unexpected server error:", err);
     res.status(500).json({ error: "Server error" });
@@ -114,35 +139,62 @@ app.post('/location-data/:email', async (req, res) => {
 });
 
 
-// app.post('/location-data/:userId', async (req, res) => {
+app.post('/location-data/:userId', async (req, res) => {
+  console.log("Sending Location Data to server");
+  const userId = req.params.userId;
+  const { latitude, longitude, timestamp } = req.body;
+
+  if (!latitude || !longitude || !timestamp) {
+    return res.status(400).json({ error: 'Missing required data' });
+  }
   
-//   const userId = req.params.userId;
-//   const { latitude, longitude, timestamp } = req.body;
-//   const formattedTimestamp = new Date(timestamp).toISOString().slice(0, 19).replace("T", " ");
+  // Format the timestamp as needed.
+  const formattedTimestamp = new Date(timestamp)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
 
-//   if ( !latitude || !longitude || !timestamp ) {
-//     return res.status(400).json({ error: 'Missing required data' });
-//   }
+  try {
+    // First, check if an entry already exists for this user at the given timestamp.
+    const checkQuery = "SELECT COUNT(*) AS count FROM ENTRY WHERE ID = ? AND ENTRY_TIME = ?";
+    db.query(checkQuery, [userId, formattedTimestamp], (checkErr, checkResults) => {
+      if (checkErr) {
+        console.error("Error checking for entry:", checkErr);
+        return res.status(500).json({ error: "Database error" });
+      }
 
-//   try {
-    
-//     const query = 'INSERT INTO ENTRY (ID, LONGITUDE, LATITUDE, ENTRY_TIME, ECO2, TVOC) VALUES (?, ?, ?, ?, NULL, NULL);';
-//     db.query(query, [userId, longitude, latitude, formattedTimestamp], (err, results) => {
-//       if (err) {
-//         console.error('Error inserting location data:', err);
-//         return res.status(500).json({ error: 'Database error' });
-//       }
-//       console.log('Location data inserted successfully');
-//       res.status(201).json({ message: 'Location data stored successfully' });
-//     });
-
-//   } catch (err){
-//     console.error("Unexpected server error:", err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-
-
-// });
+      const count = checkResults[0].count;
+      if (count === 0) {
+        // No entry exists; insert a new one.
+        console.log("No entry found; inserting new location data");
+        const insertQuery = "INSERT INTO ENTRY (ID, LONGITUDE, LATITUDE, ENTRY_TIME, ECO2, TVOC) VALUES (?, ?, ?, ?, NULL, NULL)";
+        db.query(insertQuery, [userId, longitude, latitude, formattedTimestamp], (insertErr, insertResults) => {
+          if (insertErr) {
+            console.error("Error inserting location data:", insertErr);
+            return res.status(500).json({ error: "Database error" });
+          }
+          console.log("Location data inserted successfully");
+          return res.status(201).json({ message: "Location data stored successfully" });
+        });
+      } else {
+        // Entry exists; update it with the new values.
+        console.log("Entry found; updating location data");
+        const updateQuery = "UPDATE ENTRY SET LONGITUDE = ?, LATITUDE = ? WHERE ID = ? AND ENTRY_TIME = ?";
+        db.query(updateQuery, [longitude, latitude, userId, formattedTimestamp], (updateErr, updateResults) => {
+          if (updateErr) {
+            console.error("Error updating location data:", updateErr);
+            return res.status(500).json({ error: "Database error" });
+          }
+          console.log("Location data updated successfully");
+          return res.status(200).json({ message: "Location data updated successfully" });
+        });
+      }
+    });
+  } catch (err) {
+    console.error("Unexpected server error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 //pair device 
 app.post('/pair-device', async (req, res) => {
@@ -335,52 +387,34 @@ app.get('/user-data/:email', async (req, res) => {
 // });
 
 // Retreive Heatmap Data based on email
-app.get('/map-data/:email', async (req, res) => {
-  const email = req.params.email; // Use email directly, not userId
+app.get('/map-data/:id', async (req, res) => {
+  const userId = req.params.id; // Now the input id is the actual user ID
 
   try {
-    // Step 1: Get the existing user ID from the USER table
-    const getUserQuery = 'SELECT ID FROM USER WHERE EMAIL = ?';
-    db.query(getUserQuery, [email], (err, results) => {
+    const query = `
+      SELECT LONGITUDE, LATITUDE, ECO2, TVOC, ENTRY_TIME
+      FROM ENTRY
+      WHERE ID = ?
+    `;
+
+    db.query(query, [userId], (err, rows) => {
       if (err) {
-        console.error('Database query error:', err);
-        return res.status(500).json({ error: 'Database query failed' });
+        console.error("Database error:", err);
+        return res.status(500).json({ error: "Database query failed" });
       }
 
-      if (results.length === 0) {
-        return res.status(404).json({ error: 'User not found' });
-      }
+      // Transform data into heatmap-friendly format
+      const transformedData = rows.map(row => ({
+        latitude: row.LATITUDE,
+        longitude: row.LONGITUDE,
+        weight: calculateWeight(row.ECO2, row.TVOC),
+        timestamp: row.ENTRY_TIME,
+      }));
 
-      const userId = results[0].ID;
-
-      // Step 2: Retrieve the heatmap data for the user from the ENTRY table
-      const query = `
-        SELECT LONGITUDE, LATITUDE, ECO2, TVOC, ENTRY_TIME
-        FROM ENTRY
-        WHERE ID = ?
-      `;
-      
-      db.query(query, [userId], (err, rows) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({ error: "Database query failed" });
-        }
-
-        // Step 3: Transform data into heatmap-friendly format
-        const transformedData = rows.map(row => ({
-          latitude: row.LATITUDE,
-          longitude: row.LONGITUDE,
-          weight: calculateWeight(row.ECO2, row.TVOC), 
-          timestamp: row.ENTRY_TIME, 
-        }));
-
-        // Return the transformed heatmap data
-        res.json(transformedData);
-        console.log("Retrieved Heatmap Data");
-        console.log("Transformed Data:", transformedData.length);
-      });
+      console.log("Retrieved Heatmap Data");
+      console.log("Transformed Data Length:", transformedData.length);
+      res.json(transformedData);
     });
-
   } catch (err) {
     console.error("Unexpected server error:", err);
     res.status(500).json({ error: "Server error" });

@@ -5,11 +5,11 @@ import { SERVER_URL } from "../config";
 // Store global location subscription
 let locationSubscription: Location.LocationSubscription | null = null;
 
-export async function startLocationUpdates(email: string) {
+export async function startLocationUpdates(id: string) {
   console.log("🛰️ Requesting foreground location updates...");
 
-  if (!email) {
-    console.error("❌ Email is required for location updates.");
+  if (!id) {
+    console.error("❌ id is required for location updates.");
     return;
   }
 
@@ -20,7 +20,7 @@ export async function startLocationUpdates(email: string) {
     return;
   }
 
-  const LOCATION_URL = `${SERVER_URL}/location-data/${email}`;
+  const LOCATION_URL = `${SERVER_URL}/location-data/${id}`;
 
   // Step 2: Ensure Only One Active Subscription
   if (locationSubscription) {
@@ -34,7 +34,7 @@ export async function startLocationUpdates(email: string) {
   locationSubscription = await Location.watchPositionAsync(
     {
       accuracy: Location.Accuracy.BestForNavigation, // High accuracy for tracking
-      timeInterval: 60000,  // Update every 60 seconds
+      timeInterval: 6000,  // Update every 60 seconds
       distanceInterval: 0,  // Update regardless of movement
     },
     async (location) => {
@@ -55,8 +55,6 @@ export async function startLocationUpdates(email: string) {
       } catch (e) {
         console.error("❌ Failed to save location:", e);
       }
-
-      // Send to backend
       try {
         const response = await fetch(LOCATION_URL, {
           method: "POST",
@@ -66,10 +64,9 @@ export async function startLocationUpdates(email: string) {
 
         if (!response.ok) {
           const errorText = await response.text();
-          // console.log("❌ Server error:", response.status, errorText);
+          console.log("❌ Server error:", response.status, errorText);
           return;
         }
-
         console.log("Location successfully sent to server");
       } catch (e) {
         console.error("❌ Failed to send location to server:", e);

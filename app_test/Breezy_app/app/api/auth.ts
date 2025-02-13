@@ -28,14 +28,10 @@ export async function signUpUser(email: string, username: string, id: string) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({email, username, id}),
-
-
     });
-
     if (!response.ok) {
       throw new Error("Invalid credentials");
     }
-
   } catch (error) {
     console.error("Sign up request failed:", error);
     return null;
@@ -54,7 +50,7 @@ export async function pairDevice(deviceId: string, email: string){
       throw new Error("Invalid credentials");
     }
 
-    return await response.json();
+    return await response;
   } catch (error) {
     console.error("Pairing request failed:", error);
     return null;

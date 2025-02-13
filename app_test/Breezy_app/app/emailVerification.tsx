@@ -15,21 +15,19 @@ export default function EmailVerificationScreen() {
   // Get all the query parameters.
   const params = useLocalSearchParams();
 
-  // Convert all parameters to strings using our helper.
-  console.log(params);
+  // console.log(params);
   const emailStr = getParam(params.email);
   const verificationCodeStr = getParam(params.code); 
   const usernameStr = getParam(params.username);
   const signIn = getParam(params.signIn) == "true";
   const idStr = getParam(params.id);
-  console.log(emailStr, verificationCodeStr, usernameStr, signIn);
+  // console.log(emailStr, verificationCodeStr, usernameStr, signIn);
 
   const { currentUser, setCurrentUser } = useUser();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const inputs = useRef<TextInput[]>([]);
   const router = useRouter();
 
-  // Update a specific digit of the code.
   const handleChangeText = (text: string, index: number) => {
     if (text.length > 1) {
       text = text.slice(-1); // Keep only the last character.
@@ -42,24 +40,20 @@ export default function EmailVerificationScreen() {
     }
   };
 
-  // Allow the user to move back to the previous box when deleting.
   const handleKeyPress = ({ nativeEvent }: any, index: number) => {
     if (nativeEvent.key === "Backspace" && code[index] === "" && index > 0) {
       inputs.current[index - 1]?.focus();
     }
   };
 
-  // Check if all 6 input boxes are filled.
   const isCodeComplete = code.every((char) => char !== "");
 
-  // Dummy verification logic.
   const handleVerify = () => {
     const enteredCode = code.join("");
-    console.log("Verification code entered:", enteredCode);
-    console.log("Verification code from sign in:", verificationCodeStr);
+    // console.log("Verification code entered:", enteredCode);
+    // console.log("Verification code from sign in:", verificationCodeStr);
     // For testing: if the entered code is "000000" or it matches the verification code from SignIn
     if (enteredCode === "000000" || enteredCode === verificationCodeStr) {
-      // Create a new User using the string values
         if (signIn){
             console.log("Signing In User", idStr, usernameStr);
             if (idStr !== ""){

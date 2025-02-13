@@ -12,7 +12,7 @@ interface HeatmapPoint extends LatLng {
   timestamp?: Date;
 }
 
-const DEFAULT_POINT = { latitude: 51.5074, longitude: -0.1278, weight: 20 };
+const DEFAULT_POINT = {latitude: 51.5074, longitude: -0.1278, weight: 10 };
 
 export default function MapScreen() {
   const [rawData, setRawData] = useState<HeatmapPoint[]>([]);
@@ -27,6 +27,7 @@ export default function MapScreen() {
 
   // Fetch raw data from API
   useEffect(() => {
+    console.log("Fetching heatmap data...");
     const fetchHeatmapData = async () => {
       if (!currentUser) {
         setError("No current user found.");
@@ -38,7 +39,7 @@ export default function MapScreen() {
         setLoading(true);
         setError(null);
         
-        const response = await fetch(`${SERVER_URL}/map-data/${currentUser.email}`);
+        const response = await fetch(`${SERVER_URL}/map-data/${currentUser.id}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -46,12 +47,13 @@ export default function MapScreen() {
         const data = await response.json();
         
         if (!Array.isArray(data) || data.length === 0) {
+          console.log("No data found for user:", currentUser.email, "with id", currentUser.id);
           setRawData([]);
           setHeatmapData([DEFAULT_POINT]);
           setLoading(false);
           return;
         }
-
+        
         const formattedData = data.map((point: any) => ({
           latitude: parseFloat(point.latitude),
           longitude: parseFloat(point.longitude),
@@ -71,21 +73,35 @@ export default function MapScreen() {
     fetchHeatmapData();
   }, [currentUser, refreshKey]);
 
-  // Filter data based on selected date and time range
   useEffect(() => {
     if (rawData.length === 0) return;
-
+  
     const startDateTime = new Date(selectedDate);
     startDateTime.setHours(range[0], 0, 0, 0);
     
     const endDateTime = new Date(selectedDate);
     endDateTime.setHours(range[1], 59, 59, 999);
-
+  
     const filteredData = rawData.filter((point) => {
-      const pointDate = point.timestamp as Date;
-      return pointDate >= startDateTime && pointDate <= endDateTime;
+      const pointDate = new Date(point.timestamp);
+      const inTimeRange = pointDate >= startDateTime && pointDate <= endDateTime;
+      
+      // Validate coordinates
+      const hasCoordinates =
+        typeof point.latitude === "number" &&
+        !isNaN(point.latitude) &&
+        typeof point.longitude === "number" &&
+        !isNaN(point.longitude);
+      
+      // Validate measurements and ensure weight is not more than 20
+      const hasMeasurements =
+        typeof point.weight === "number" &&
+        !isNaN(point.weight) &&
+        point.weight <= 20;
+  
+      return inTimeRange && hasCoordinates && hasMeasurements;
     });
-
+    console.log("Filtered data:", filteredData.length);
     setHeatmapData(filteredData.length > 0 ? filteredData : [DEFAULT_POINT]);
   }, [rawData, selectedDate, range]);
 
@@ -127,8 +143,17 @@ export default function MapScreen() {
           longitudeDelta: 0.04,
         }}
       >
-        <Heatmap points={heatmapData} />
-      </MapView>
+         <Heatmap
+            points={heatmapData}
+            radius={10}         // Each point's influence radius (in pixels)
+            opacity={0.7}       // Overall transparency of the heatmap
+            gradient={{
+              colors: ['#00f', '#0ff', '#0f0', '#ff0', '#f00'], // Colors for the gradient
+              startPoints: [0.01, 0.25, 0.5, 0.75, 1],           // Relative positions for the colors (0-1)
+              colorMapSize: 256,                                  // Number of steps in the gradient
+            }}
+          />
+        </MapView>
 
       <View style={styles.sliderContainer}>
         {error && <Text style={styles.errorText}>{error}</Text>}

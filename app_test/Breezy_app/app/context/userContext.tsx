@@ -33,7 +33,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (currentUser) {
       console.log("User logged in, starting location updates...");
-      startLocationUpdates(currentUser.email);
+      startLocationUpdates(currentUser.id);
     } else {
       console.log("User logged out, stopping location updates...");
       stopLocationUpdates();

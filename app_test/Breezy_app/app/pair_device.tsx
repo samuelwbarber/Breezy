@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native";
-import { pairDevice} from "./api/auth";
-import { User } from "./context/user";
+import { pairDevice } from "./api/auth";
 import { useUser } from "./context/userContext";
 import { useRouter } from "expo-router";
 
@@ -15,12 +14,11 @@ export default function PairDeviceScreen() {
     if (text.length > 1) {
       text = text.slice(-1); // Ensure only one character is kept
     }
-
     const newDeviceId = [...deviceId];
     newDeviceId[index] = text;
     setDeviceId(newDeviceId);
 
-    // Move focus to the next box if there is text entered
+    // Move focus to the next box if text is entered
     if (text && index < deviceId.length - 1) {
       inputs.current[index + 1]?.focus();
     }
@@ -34,6 +32,28 @@ export default function PairDeviceScreen() {
 
   // Determine if all 6 squares are filled
   const isDeviceIdComplete = deviceId.every((char) => char !== "");
+
+  // Handle the Connect button press with async/await
+  const handleConnect = async () => {
+    if (currentUser) {
+      const id = deviceId.join("");
+      try {
+        const result = await pairDevice(id, currentUser.email);
+        if (result.ok) {
+          // Pairing was successful, update the user id and navigate home
+          currentUser.id = id;
+          console.log("Connected with Device ID:", id);
+          router.replace("/(tabs)/home");
+        } else {
+          console.log("Pairing failed:", result?.json().message);
+        }
+      } catch (error) {
+        console.error("Error during pairing:", error);
+      }
+    } else {
+      console.log("No User Found");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -57,16 +77,7 @@ export default function PairDeviceScreen() {
       <TouchableOpacity
         style={[styles.connectButton, !isDeviceIdComplete && styles.disabledButton]}
         disabled={!isDeviceIdComplete}
-        onPress={() => {
-          if(currentUser){
-          pairDevice(deviceId.join(""), currentUser?.email);
-          currentUser.id = deviceId.join("");
-          console.log("Connect pressed with Device ID:", deviceId.join(""));
-          router.replace('/(tabs)/home');}
-          else{
-            console.log("No User Found");
-          }
-        }}
+        onPress={handleConnect}
       >
         <Text style={styles.connectButtonText}>Connect</Text>
       </TouchableOpacity>
