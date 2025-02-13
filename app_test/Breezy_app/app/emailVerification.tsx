@@ -5,23 +5,19 @@ import { useUser } from "./context/userContext";
 import { User } from "./context/user";
 import { loginUser, signUpUser } from "./api/auth";
 
-// Helper function to always return a string.
 function getParam(param: string | string[] | undefined): string {
   if (Array.isArray(param)) return param[0];
   return param ?? "";
 }
 
 export default function EmailVerificationScreen() {
-  // Get all the query parameters.
   const params = useLocalSearchParams();
 
-  // console.log(params);
   const emailStr = getParam(params.email);
   const verificationCodeStr = getParam(params.code); 
   const usernameStr = getParam(params.username);
   const signIn = getParam(params.signIn) == "true";
   const idStr = getParam(params.id);
-  // console.log(emailStr, verificationCodeStr, usernameStr, signIn);
 
   const { currentUser, setCurrentUser } = useUser();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
@@ -30,7 +26,7 @@ export default function EmailVerificationScreen() {
 
   const handleChangeText = (text: string, index: number) => {
     if (text.length > 1) {
-      text = text.slice(-1); // Keep only the last character.
+      text = text.slice(-1);
     }
     const newCode = [...code];
     newCode[index] = text;
@@ -50,9 +46,6 @@ export default function EmailVerificationScreen() {
 
   const handleVerify = () => {
     const enteredCode = code.join("");
-    // console.log("Verification code entered:", enteredCode);
-    // console.log("Verification code from sign in:", verificationCodeStr);
-    // For testing: if the entered code is "000000" or it matches the verification code from SignIn
     if (enteredCode === "000000" || enteredCode === verificationCodeStr) {
         if (signIn){
             console.log("Signing In User", idStr, usernameStr);
@@ -72,7 +65,7 @@ export default function EmailVerificationScreen() {
       router.replace("/(tabs)/home");
     } else {
       console.log("Verification code incorrect");
-      setCode(["", "", "", "", "", ""]);  // Clear the code
+      setCode(["", "", "", "", "", ""]); 
       alert("Incorrect verification code. Please try again.");
     }
   };

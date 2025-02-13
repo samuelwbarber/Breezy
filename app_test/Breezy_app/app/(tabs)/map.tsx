@@ -24,6 +24,16 @@ export default function MapScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // State to track if we're displaying other users' data
+  const [showOtherUsersData, setShowOtherUsersData] = useState(false);
+
+  // Dummy function for the button press
+  const handleOtherUsersData = () => {
+    console.log("Dummy function triggered: Viewing other users' data...");
+    setShowOtherUsersData(!showOtherUsersData); 
+
+  };
 
   // Fetch raw data from API
   useEffect(() => {
@@ -38,14 +48,17 @@ export default function MapScreen() {
       try {
         setLoading(true);
         setError(null);
-        
-        const response = await fetch(`${SERVER_URL}/map-data/${currentUser.id}`);
+        const response = await fetch(`${SERVER_URL}/${showOtherUsersData ? 'all-map-data' : `map-data/${currentUser.id}`}`);
+
+        console.log("Showing users data?",showOtherUsersData);
+        if(showOtherUsersData){
+        }
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         
         const data = await response.json();
-        
+        console.log("Data fetched:", data.length);
         if (!Array.isArray(data) || data.length === 0) {
           console.log("No data found for user:", currentUser.email, "with id", currentUser.id);
           setRawData([]);
@@ -71,7 +84,7 @@ export default function MapScreen() {
     };
 
     fetchHeatmapData();
-  }, [currentUser, refreshKey]);
+  }, [currentUser, refreshKey, showOtherUsersData]);
 
   useEffect(() => {
     if (rawData.length === 0) return;
@@ -123,13 +136,20 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-
       <View style={styles.headerContainer}>
         <TouchableOpacity
           style={styles.refreshButton}
           onPress={() => setRefreshKey((prev) => prev + 1)} // 👈 Triggers useEffect
         >
           <Ionicons name="refresh" style={styles.refreshIcon} />
+        </TouchableOpacity>
+        
+        {/* Circular button for viewing other users' data */}
+        <TouchableOpacity
+          style={[styles.otherUsersButton, showOtherUsersData && styles.otherUsersButtonBlue]} // Change style when data is being displayed
+          onPress={handleOtherUsersData}
+        >
+          <Ionicons name="people" style={styles.otherUsersIcon} />
         </TouchableOpacity>
       </View>
 
@@ -143,17 +163,17 @@ export default function MapScreen() {
           longitudeDelta: 0.04,
         }}
       >
-         <Heatmap
-            points={heatmapData}
-            radius={10}         // Each point's influence radius (in pixels)
-            opacity={0.7}       // Overall transparency of the heatmap
-            gradient={{
-              colors: ['#00f', '#0ff', '#0f0', '#ff0', '#f00'], // Colors for the gradient
-              startPoints: [0.01, 0.25, 0.5, 0.75, 1],           // Relative positions for the colors (0-1)
-              colorMapSize: 256,                                  // Number of steps in the gradient
-            }}
-          />
-        </MapView>
+        <Heatmap
+          points={heatmapData}
+          radius={10}
+          opacity={0.7}
+          gradient={{
+            colors: ['#00f', '#0ff', '#0f0', '#ff0', '#f00'],
+            startPoints: [0.01, 0.25, 0.5, 0.75, 1],
+            colorMapSize: 256,
+          }}
+        />
+      </MapView>
 
       <View style={styles.sliderContainer}>
         {error && <Text style={styles.errorText}>{error}</Text>}
@@ -188,7 +208,7 @@ export default function MapScreen() {
           max={24}
           step={1}
           onValuesChange={setRange}
-          selectedStyle={{ backgroundColor: "#6C757D" }}  
+          selectedStyle={{ backgroundColor: "#6C757D" }}
           unselectedStyle={{ backgroundColor: "#cccccc" }}
           markerStyle={{ backgroundColor: "#6C757D", height: 20, width: 20 }}
           sliderLength={300}
@@ -220,17 +240,10 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
-  // headerContainer: {
-  //   flexDirection: 'row',
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   width: '100%',
-  //   marginBottom: 10,
-  // },
   headerContainer: {
     position: "absolute",
     top: 50,
-    right: 20,
+    left: 20,
     zIndex: 10,
   },
   refreshButton: {
@@ -242,10 +255,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  refreshButtonDisabled: {
-    opacity: 0.7,
-  },
   refreshIcon: {
+    fontSize: 24,
+    color: '#6C757D',
+  },
+  otherUsersButton: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 50,
+    backgroundColor: '#f8f9fa',
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  otherUsersButtonBlue: {
+    backgroundColor: '#007bff', // Blue color when showing other users' data
+  },
+  otherUsersIcon: {
     fontSize: 24,
     color: '#6C757D',
   },
@@ -274,5 +301,5 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 10,
     flex: 1,
-  }
+  },
 });

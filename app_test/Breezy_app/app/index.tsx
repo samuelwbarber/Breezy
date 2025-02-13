@@ -1,4 +1,3 @@
-// app/index.tsx (or wherever your index file is)
 import React, { useEffect } from "react";
 import { useUser } from "./context/userContext";
 import { useRouter } from "expo-router";
@@ -8,7 +7,6 @@ export default function Index() {
   const router = useRouter();
 
   useEffect(() => {
-    // Defer the navigation until after the root layout is mounted.
     const timer = setTimeout(() => {
       if (currentUser) {
         console.log("Moving to HOME from Index");

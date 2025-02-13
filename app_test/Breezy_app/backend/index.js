@@ -206,7 +206,6 @@ app.post('/pair-device', async (req, res) => {
   }
 
   try {
-    //Get the existing user ID from the USER table
     const getUserQuery = 'SELECT ID FROM USER WHERE EMAIL = ?';
 
     db.query(getUserQuery, [email], (err, results) => {
@@ -420,6 +419,38 @@ app.get('/map-data/:id', async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+app.get('/all-map-data', async (req, res) => {
+  try {
+    const query = `
+      SELECT LONGITUDE, LATITUDE, ECO2, TVOC, ENTRY_TIME
+      FROM ENTRY
+    `;
+    console.log("Retrieving Heatmap Data from all users");
+    db.query(query, (err, rows) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ error: "Database query failed" });
+      }
+
+      const transformedData = rows.map(row => ({
+        latitude: row.LATITUDE,
+        longitude: row.LONGITUDE,
+        weight: calculateWeight(row.ECO2, row.TVOC),
+        timestamp: row.ENTRY_TIME,
+      }));
+
+      console.log("Retrieved Heatmap Data");
+      console.log("Transformed Data Length:", transformedData.length);
+      res.json(transformedData);
+    });
+  } catch (err) {
+    console.error("Unexpected server error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 
 
 function calculateWeight(eco2, tvoc) {

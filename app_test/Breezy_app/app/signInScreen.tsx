@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, TextInput, Button, StyleSheet, TouchableOpacity } from "react-native";
 import { useUser } from "./context/userContext";
-import { User } from "./context/user";
 import { useRouter } from "expo-router";
 import { loginUser } from "./api/auth";
 
-
 export default function SignInScreen2() {
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState(""); // Only used in Sign Up mode
+  const [username, setUsername] = useState(""); 
   const [message, setMessage] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false); // Toggle between Sign In and Sign Up
+  const [isSignUp, setIsSignUp] = useState(false); 
 
   let { currentUser, setCurrentUser } = useUser();
   const router = useRouter();
 
-  // Whenever currentUser updates, redirect automatically if a user is logged in.
   useEffect(() => {
     console.log("Current user updated:", currentUser);
     if (currentUser) {
@@ -24,11 +21,7 @@ export default function SignInScreen2() {
     }
   }, [currentUser, router]);
 
-
-  async function sendEmailFromExpo(
-    recipientEmail: string,
-    code: string
-  ) {
+  async function sendEmailFromExpo(recipientEmail: string, code: string) {
     try {
       const response = await fetch('http://18.134.180.224:5000/url', {
         method: 'POST',
@@ -43,20 +36,11 @@ export default function SignInScreen2() {
 
       const responseText = await response.text();
       console.log('Raw response:', responseText);
-
-      const result = await response.json();
-      if (response.ok) {
-        // console.log('Email sent successfully:', result);
-      } else {
-        // console.error('Email sending failed:', result);
-      }
     } catch (error) {
-      // console.error('Error sending email:', error);
+      console.log('Error sending email:', error);
     }
   }
 
-
-  // Dummy function to simulate sending a verification email and verifying it.
   const verifyEmail = async (email: string) => {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     console.log(`Verification code for ${email}: ${code}`);    
@@ -75,16 +59,14 @@ export default function SignInScreen2() {
           return;
         } else {
           const code = await verifyEmail(email);
-          const route: `/emailVerification?${string}` = `/emailVerification?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}&username=${encodeURIComponent(userData.name)}&signIn=${encodeURIComponent(true)}&id=${encodeURIComponent(userData.id)}`;
+          const route = `/emailVerification?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}&username=${encodeURIComponent(userData.name)}&signIn=${encodeURIComponent(true)}&id=${encodeURIComponent(userData.id)}`;
           router.replace(route);
-
         }
       } catch (error) {
         console.error("Error during sign in:", error);
         setMessage("Error during email verification.");
       }
     } else {
-      // Check that user already exists
       const userdata = await loginUser(email);
       if (userdata !== null) {
         setMessage("Account already exists. Please log in instead.");
@@ -97,12 +79,9 @@ export default function SignInScreen2() {
 
       try {
         const code = await verifyEmail(email);
-        console.log("Username Set as", username)
-        const route: `/emailVerification?${string}` =
-        `/emailVerification?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}&username=${encodeURIComponent(username)}&signIn=${encodeURIComponent(false)}&id=${encodeURIComponent("test")}`;
-        
+        console.log("Username Set as", username);
+        const route = `/emailVerification?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}&username=${encodeURIComponent(username)}&signIn=${encodeURIComponent(false)}&id=${encodeURIComponent("test")}`;
         router.replace(route); 
-        
       } catch (error) {
         console.error("Error during sign up:", error);
         setMessage("Error during email verification.");
@@ -110,13 +89,18 @@ export default function SignInScreen2() {
     }
   };
 
-  // If a user is already logged in, don't render the sign in UI.
   if (currentUser) {
     return null;
   }
 
   return (
     <View style={styles.container}>
+      {/* Logo and slogan on top center */}
+      <View style={styles.logoContainer}>
+        <Text style={styles.logo}>Breezy</Text>
+        <Text style={styles.slogan}>Your Personal AI Air Quality Companion</Text>
+      </View>
+
       <Text style={styles.title}>{isSignUp ? "Create Account" : "Sign In"}</Text>
       <TextInput
         style={styles.input}
@@ -150,13 +134,33 @@ export default function SignInScreen2() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+  },
+  logoContainer: {
+    position: "absolute",
+    top: 60,
+    width: "100%",
+    alignItems: "center",
+  },
+  logo: {
+    fontSize: 48,
+    fontFamily: "sans-serif",
+    fontWeight: "bold",
+    color: "#222", // Darker color for the logo
+  },
+  slogan: {
+    fontSize: 14,
+    fontFamily: "sans-serif",
+    color: "#555",
+    marginTop: 4,
+    textAlign: "center",
   },
   title: {
     fontSize: 24,
     marginBottom: 20,
+    marginTop: 120, // Ensure the title doesn't overlap with the logo
   },
   input: {
     borderWidth: 1,
@@ -176,3 +180,4 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
+

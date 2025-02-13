@@ -47,12 +47,10 @@ export async function pairDevice(deviceId: string, email: string){
     });
 
     if (!response.ok) {
-      throw new Error("Invalid credentials");
     }
 
     return await response;
   } catch (error) {
-    console.error("Pairing request failed:", error);
     return null;
   }
 }
@@ -70,19 +68,15 @@ export async function fetchUserDataForUser(user: User): Promise<User | null> {
 
     const data = await response.json();
 
-    // Map the returned data to Message instances.
-    // Adjust the property names as needed if your backend uses different names.
     const messages = data.map((entry: any) => new Message(
       entry.coordinate.latitude,
       entry.coordinate.longitude,
       entry.eco2,
       entry.tvoc,
-      new Date(entry.date) // or entry.date if that's the property name
+      new Date(entry.date) 
     ));
 
-    // console.log("Fetched user data:", messages);
     user.messageLog = messages;
-    // console.log("Fetched userlog data:", user.messageLog);
 
     return user;
   } catch (error) {

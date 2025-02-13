@@ -12,13 +12,12 @@ export default function PairDeviceScreen() {
 
   const handleChangeText = (text: string, index: number) => {
     if (text.length > 1) {
-      text = text.slice(-1); // Ensure only one character is kept
+      text = text.slice(-1); 
     }
     const newDeviceId = [...deviceId];
     newDeviceId[index] = text;
     setDeviceId(newDeviceId);
 
-    // Move focus to the next box if text is entered
     if (text && index < deviceId.length - 1) {
       inputs.current[index + 1]?.focus();
     }
@@ -30,17 +29,14 @@ export default function PairDeviceScreen() {
     }
   };
 
-  // Determine if all 6 squares are filled
   const isDeviceIdComplete = deviceId.every((char) => char !== "");
 
-  // Handle the Connect button press with async/await
   const handleConnect = async () => {
     if (currentUser) {
       const id = deviceId.join("");
       try {
         const result = await pairDevice(id, currentUser.email);
         if (result.ok) {
-          // Pairing was successful, update the user id and navigate home
           currentUser.id = id;
           console.log("Connected with Device ID:", id);
           router.replace("/(tabs)/home");
@@ -101,19 +97,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   input: {
-    width: 50, // Smaller size
-    height: 50, // Smaller size
+    width: 50, 
+    height: 50, 
     margin: 8,
-    borderWidth: 2, // Outline only
+    borderWidth: 2, 
     borderColor: "black",
     color: "black",
     fontSize: 24,
     textAlign: "center",
-    borderRadius: 5, // Slightly rounded edges
+    borderRadius: 5, 
   },
   connectButton: {
     marginTop: 30,
-    backgroundColor: "#6C757D", // Cooler gray color
+    backgroundColor: "#6C757D", 
     paddingVertical: 12,
     paddingHorizontal: 40,
     borderRadius: 8,

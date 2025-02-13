@@ -2,7 +2,6 @@ import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SERVER_URL } from "../config";
 
-// Store global location subscription
 let locationSubscription: Location.LocationSubscription | null = null;
 
 export async function startLocationUpdates(id: string) {
@@ -13,7 +12,6 @@ export async function startLocationUpdates(id: string) {
     return;
   }
 
-  // Step 1: Request Foreground Permissions
   const { granted } = await Location.requestForegroundPermissionsAsync();
   if (!granted) {
     console.error("❌ Foreground location permission not granted.");
@@ -22,7 +20,6 @@ export async function startLocationUpdates(id: string) {
 
   const LOCATION_URL = `${SERVER_URL}/location-data/${id}`;
 
-  // Step 2: Ensure Only One Active Subscription
   if (locationSubscription) {
     console.log("⚡ Location updates already running.");
     return;
@@ -30,12 +27,11 @@ export async function startLocationUpdates(id: string) {
 
   console.log("🚀 Starting new location tracking session...");
   
-  // Step 3: Start watching location
   locationSubscription = await Location.watchPositionAsync(
     {
-      accuracy: Location.Accuracy.BestForNavigation, // High accuracy for tracking
-      timeInterval: 6000,  // Update every 60 seconds
-      distanceInterval: 0,  // Update regardless of movement
+      accuracy: Location.Accuracy.BestForNavigation, 
+      timeInterval: 6000,  
+      distanceInterval: 0,  
     },
     async (location) => {
       console.log("New foreground location:", location.coords.latitude, location.coords.longitude);
@@ -45,11 +41,10 @@ export async function startLocationUpdates(id: string) {
       const now = new Date();
       now.setSeconds(0, 0); 
       now.setMinutes(now.getMinutes()-1);
-      const timestamp = now.toISOString().split(".")[0] + "Z"; // ISO format without milliseconds
+      const timestamp = now.toISOString().split(".")[0] + "Z"; 
 
       const locationData = { latitude, longitude, timestamp };
 
-      // Save to AsyncStorage
       try {
         await AsyncStorage.setItem("currentLocation", JSON.stringify(locationData));
       } catch (e) {
@@ -77,7 +72,6 @@ export async function startLocationUpdates(id: string) {
   console.log("✅Foreground location tracking started.");
 }
 
-// Stop Location Updates
 export function stopLocationUpdates() {
   if (locationSubscription) {
     locationSubscription.remove();
@@ -86,7 +80,6 @@ export function stopLocationUpdates() {
   }
 }
 
-// Get last saved location from AsyncStorage
 export async function getCurrentLocation() {
   try {
     const location = await AsyncStorage.getItem("currentLocation");
