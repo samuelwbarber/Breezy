@@ -10,6 +10,13 @@ Breezy is an innovative IoT solution designed to monitor air pollution in real-t
 
 - **Smart Suggestions**: Receive personalized recommendations to improve your commute based on your unique pollution exposure patterns.
 
+## Demo Video
+
+# Breezy
+
+[![Watch the video](https://img.youtube.com/vi/qK_NxzhT2pY/maxresdefault.jpg)](https://www.youtube.com/watch?v=qK_NxzhT2pY)
+
+
 ## Getting Started
 
 1. **Download the Breezy App**: Access the latest version of the Breezy app from the [Download](https://breezy.mercurycomponents.co.uk/) page.
