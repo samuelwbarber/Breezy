@@ -12,8 +12,6 @@ Breezy is an innovative IoT solution designed to monitor air pollution in real-t
 
 ## Demo Video
 
-# Breezy
-
 [![Watch the video](https://img.youtube.com/vi/qK_NxzhT2pY/maxresdefault.jpg)](https://www.youtube.com/watch?v=qK_NxzhT2pY)
 
 
